@@ -6,8 +6,8 @@
     do {                                                 \
         IF_error_t __err__ = (call);                      \
         if (__err__ != IF_SUCCESS) {                      \
-            fprintf(stderr, "ImageFlow ERROR: %s\n",    \
-                    IF_strerror(__err__));               \
+            fprintf(stderr, "ImageFlow ERROR: %s | In file: %s, at line %d\n",    \
+                    IF_strerror(__err__), __FILE__, __LINE__);               \
             return __err__;                               \
         }                                               \
     } while(0)

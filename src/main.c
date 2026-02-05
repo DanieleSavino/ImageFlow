@@ -1,5 +1,6 @@
 #include "ImageFlow/error/error.h"
-#include "ImageFlow/io/image_io.h"
+#include "ImageFlow/io/image.h"
+#include "ImageFlow/omp/backend.h"
 #include <stdlib.h>
 
 int main(void)
@@ -9,8 +10,9 @@ int main(void)
         IF_logError(stderr, IF_OUT_OF_MEMORY);
     }
 
-    IF_CHECK(IF_loadImage(img, "img.png"));
-    IF_CHECK(IF_storeImage(img, "img_store.png"));
+    IF_CHECK(IF_loadImage(img, "img.jpg"));
+    IF_CHECK(IFOMP_grayScale(img));
+    IF_CHECK(IF_storeImage(img, "img_store.jpg"));
 
     IF_CHECK(IF_freeImage(img));
     free(img);
