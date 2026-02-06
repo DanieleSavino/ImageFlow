@@ -1,3 +1,4 @@
+#include "ImageFlow/cuda/backend.h"
 #include "ImageFlow/error/error.h"
 #include "ImageFlow/io/image.h"
 #include "ImageFlow/omp/backend.h"
@@ -12,7 +13,12 @@ int main(void)
 
     IF_CHECK(IF_loadImage(img, "img.jpg"));
     IF_CHECK(IFOMP_grayScale(img));
-    IF_CHECK(IF_storeImage(img, "img_store.jpg"));
+    IF_CHECK(IF_storeImage(img, "img_omp.jpg"));
+
+
+    IF_CHECK(IF_loadImage(img, "img.jpg"));
+    IF_CHECK(IFCU_grayScale(img));
+    IF_CHECK(IF_storeImage(img, "img_cuda.jpg"));
 
     IF_CHECK(IF_freeImage(img));
     free(img);

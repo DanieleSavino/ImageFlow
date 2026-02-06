@@ -48,6 +48,7 @@ typedef enum {
     // Parallel / MPI errors
     IF_MPI_ERROR,
     IF_OMP_ERROR,
+    IF_CUDA_ERROR,
 
     // General / unknown
     IF_UNKNOWN_ERROR
