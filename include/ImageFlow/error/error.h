@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 
 #define IF_CHECK(call)                              \
@@ -49,6 +53,7 @@ typedef enum {
     IF_MPI_ERROR,
     IF_OMP_ERROR,
     IF_CUDA_ERROR,
+    IF_HIP_ERROR,
 
     // General / unknown
     IF_UNKNOWN_ERROR
@@ -57,3 +62,7 @@ typedef enum {
 const char *IF_strerror(IF_error_t e);
 
 void IF_logError(FILE *stream, IF_error_t e);
+
+#ifdef __cplusplus
+}
+#endif

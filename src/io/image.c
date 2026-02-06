@@ -43,7 +43,7 @@ IF_error_t IF_loadImage(IF_image_t *img, const char *path) {
 }
 
 static inline unsigned char *float_to_bytes(const float *data, int n) {
-    unsigned char *bytes = malloc(n);
+    unsigned char *bytes = malloc(n * sizeof(float));
     if (!bytes) return NULL;
 
     #pragma omp parallel for simd schedule(static)

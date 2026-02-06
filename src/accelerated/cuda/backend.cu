@@ -1,9 +1,14 @@
-#include "ImageFlow/cuda/backend.h"
+#include "ImageFlow/accelerated/cuda/backend.h"
 #include <cuda.h>
 
 #include "ImageFlow/error/error.h"
 #include "ImageFlow/io/image.h"
 #include <cstddef>
+
+IF_error_t IFCU_getDevices(int *cuda_dev) {
+    cudaGetDeviceCount(cuda_dev);
+    return IF_SUCCESS;
+}
 
 static inline IF_error_t IFCU_checkImg(const IF_image_t *img) {
     if(img == NULL || img->data == NULL) {
@@ -92,21 +97,20 @@ IF_error_t IFCU_load(const IF_image_t *img, IF_image_t **cuda_img) {
 }
 
 IF_error_t IFCU_retrieve(IF_image_t **cuda_img, IF_image_t *img_out) {
-    IF_CUDA_CHECK(cudaMemcpy(img_out, cuda_img, sizeof(IF_image_t), cudaMemcpyDeviceToHost));
-
     IF_image_t *d_cuda_img = *cuda_img;
+
+    IF_CUDA_CHECK(cudaMemcpy(img_out, d_cuda_img, sizeof(IF_image_t), cudaMemcpyDeviceToHost));
 
     int w = img_out->width;
     int h = img_out->height;
     int c = img_out->channels;
 
     float *img_data = (float*)malloc(w * h * c * sizeof(float));
-    IF_CUDA_CHECK(cudaMemcpy(img_data, d_cuda_img->data, w * h * c * sizeof(float), cudaMemcpyDeviceToHost));
+    IF_CUDA_CHECK(cudaMemcpy(img_data, img_out->data, w * h * c * sizeof(float), cudaMemcpyDeviceToHost));
+
+    IF_CUDA_CHECK(cudaFree(img_out->data));
 
     img_out->data = img_data;
-
-    IF_CUDA_CHECK(cudaFree(d_cuda_img->data));
-    d_cuda_img->data = NULL;
 
     IF_CUDA_CHECK(cudaFree(d_cuda_img));
     *cuda_img = NULL;
@@ -114,7 +118,7 @@ IF_error_t IFCU_retrieve(IF_image_t **cuda_img, IF_image_t *img_out) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFCU_loaded_grayScale(IF_image_t *img, IF_image_t *cuda_img) {
+IF_error_t IFCU_loaded_grayScale(const IF_image_t *img, IF_image_t *cuda_img) {
     if(cuda_img == NULL) {
         return IF_NULL_POINTER;
     }
@@ -145,7 +149,7 @@ IF_error_t IFCU_grayScale(IF_image_t *img) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFCU_loaded_invert(IF_image_t *img, IF_image_t *cuda_img) {
+IF_error_t IFCU_loaded_invert(const IF_image_t *img, IF_image_t *cuda_img) {
     if(cuda_img == NULL) {
         return IF_NULL_POINTER;
     }
@@ -176,7 +180,7 @@ IF_error_t IFCU_invert(IF_image_t *img) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFCU_loaded_brightness(IF_image_t *img, IF_image_t *cuda_img, float factor) {
+IF_error_t IFCU_loaded_brightness(const IF_image_t *img, IF_image_t *cuda_img, float factor) {
     if(cuda_img == NULL) {
         return IF_NULL_POINTER;
     }
