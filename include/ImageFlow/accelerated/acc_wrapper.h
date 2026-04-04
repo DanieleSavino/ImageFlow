@@ -1,12 +1,14 @@
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
+
+#include "ImageFlow/io/image.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <ImageFlow/accelerated/cuda/backend.h>
-#include <ImageFlow/accelerated/hip/backend.h>
-
+/**
+ * WARN: I'm not interested in making this multi-gpu for now.
+ */
 typedef enum {
     UNDEF = 0,
     NO_ACC,
@@ -14,9 +16,8 @@ typedef enum {
     HIP_ACC
 } IF_acc_t;
 
-extern IF_acc_t acc_comp;
-
 IF_error_t IFACC_check_system();
+IF_error_t IFACC_available();
 
 IF_error_t IFACC_load(const IF_image_t *img, IF_image_t **cuda_img);
 IF_error_t IFACC_retrieve(IF_image_t **cuda_img, IF_image_t *img_out);

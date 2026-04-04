@@ -1,5 +1,5 @@
 #include "ImageFlow/omp/backend.h"
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include <stdlib.h>
 #include <string.h>

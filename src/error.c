@@ -1,4 +1,4 @@
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include <stdio.h>
 
 const char *IF_strerror(IF_error_t e) {

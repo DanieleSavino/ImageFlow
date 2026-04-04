@@ -1,7 +1,7 @@
 #include "ImageFlow/accelerated/cuda/backend.h"
 #include <cuda.h>
 
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include <cstddef>
 

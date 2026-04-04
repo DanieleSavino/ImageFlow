@@ -1,5 +1,5 @@
 #include "ImageFlow/io/image.h"
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include <string.h>
 
 IF_error_t IF_loadImageFallback(IF_image_t *img, const char *path) {

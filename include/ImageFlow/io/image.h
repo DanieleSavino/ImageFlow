@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/stb/stb_image.h"
 #include "ImageFlow/stb/stb_image_write.h"
 

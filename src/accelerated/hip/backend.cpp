@@ -1,7 +1,7 @@
 #include "ImageFlow/accelerated/hip/backend.h"
 #include <hip/hip_runtime.h>
 
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include <cstddef>
 

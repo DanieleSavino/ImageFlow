@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 
 IF_error_t IFOMP_grayScale(IF_image_t *img);

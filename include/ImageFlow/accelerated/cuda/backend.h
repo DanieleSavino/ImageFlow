@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "ImageFlow/error/error.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 
 #define IF_CUDA_CHECK(call)                                                       \
