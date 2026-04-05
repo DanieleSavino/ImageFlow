@@ -33,18 +33,18 @@ extern "C" {
         }                                                                        \
     } while (0)
 
-IF_error_t IFHIP_getDevices(int *hip_dev);
+NODISCARD IF_error_t IFHIP_getDevices(int *hip_dev);
 
-IF_error_t IFHIP_load(const IF_image_t *img, IF_image_t **hip_img);
-IF_error_t IFHIP_retrieve(IF_image_t **hip_img, IF_image_t *img_out);
+NODISCARD IF_error_t IFHIP_load(const IF_image_t *img, IF_image_t **hip_img);
+NODISCARD IF_error_t IFHIP_retrieve(IF_image_t **hip_img, IF_image_t *img_out);
 
-IF_error_t IFHIP_grayScale(IF_image_t *img);
-IF_error_t IFHIP_invert(IF_image_t *img);
-IF_error_t IFHIP_brightness(IF_image_t *img, float factor);
+NODISCARD IF_error_t IFHIP_grayScale(IF_image_t *img);
+NODISCARD IF_error_t IFHIP_invert(IF_image_t *img);
+NODISCARD IF_error_t IFHIP_brightness(IF_image_t *img, float factor);
 
-IF_error_t IFHIP_loaded_grayScale(const IF_image_t *img, IF_image_t *hip_img);
-IF_error_t IFHIP_loaded_invert(const IF_image_t *img, IF_image_t *hip_img);
-IF_error_t IFHIP_loaded_brightness(const IF_image_t *img, IF_image_t *hip_img, float factor);
+NODISCARD IF_error_t IFHIP_loaded_grayScale(const IF_image_t *img, IF_image_t *hip_img);
+NODISCARD IF_error_t IFHIP_loaded_invert(const IF_image_t *img, IF_image_t *hip_img);
+NODISCARD IF_error_t IFHIP_loaded_brightness(const IF_image_t *img, IF_image_t *hip_img, float factor);
 
 #ifdef __cplusplus
 }

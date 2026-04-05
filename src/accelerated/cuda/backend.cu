@@ -140,11 +140,11 @@ IF_error_t IFCU_loaded_grayScale(const IF_image_t *img, IF_image_t *cuda_img) {
 
 IF_error_t IFCU_grayScale(IF_image_t *img) {
     IF_image_t *cuda_img;
-    IFCU_load(img, &cuda_img);
+    IF_CHECK(IFCU_load(img, &cuda_img));
 
     IF_CHECK(IFCU_loaded_grayScale(img, cuda_img));
 
-    IFCU_retrieve(&cuda_img, img);
+    IF_CHECK(IFCU_retrieve(&cuda_img, img));
 
     return IF_SUCCESS;
 }
@@ -171,11 +171,11 @@ IF_error_t IFCU_loaded_invert(const IF_image_t *img, IF_image_t *cuda_img) {
 
 IF_error_t IFCU_invert(IF_image_t *img) {
     IF_image_t *cuda_img;
-    IFCU_load(img, &cuda_img);
+    IF_CHECK(IFCU_load(img, &cuda_img));
 
     IF_CHECK(IFCU_loaded_invert(img, cuda_img));
 
-    IFCU_retrieve(&cuda_img, img);
+    IF_CHECK(IFCU_retrieve(&cuda_img, img));
 
     return IF_SUCCESS;
 }
@@ -202,11 +202,11 @@ IF_error_t IFCU_loaded_brightness(const IF_image_t *img, IF_image_t *cuda_img, f
 
 IF_error_t IFCU_brightness(IF_image_t *img, float factor) {
     IF_image_t *cuda_img;
-    IFCU_load(img, &cuda_img);
+    IF_CHECK(IFCU_load(img, &cuda_img));
 
     IF_CHECK(IFCU_loaded_brightness(img, cuda_img, factor));
 
-    IFCU_retrieve(&cuda_img, img);
+    IF_CHECK(IFCU_retrieve(&cuda_img, img));
 
     return IF_SUCCESS;
 }

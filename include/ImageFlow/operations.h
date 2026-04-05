@@ -17,9 +17,9 @@ extern "C" {
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 
-IF_error_t IF_grayScale(IF_image_t *img);
-IF_error_t IF_invert(IF_image_t *img);
-IF_error_t IF_brightness(IF_image_t *img, float factor);
+NODISCARD IF_error_t IF_grayScale(IF_image_t *img);
+NODISCARD IF_error_t IF_invert(IF_image_t *img);
+NODISCARD IF_error_t IF_brightness(IF_image_t *img, float factor);
 
 #ifdef __cplusplus
 }

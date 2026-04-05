@@ -6,6 +6,15 @@ extern "C" {
 
 #include <stdio.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#define NODISCARD __attribute__((warn_unused_result))
+// WARN: MSC is not supported.
+#elif defined(_MSC_VER)
+#define NODISCARD _Check_return_
+#else
+#define NODISCARD
+#endif
+
 #define IF_CHECK(call)                              \
     do {                                                 \
         IF_error_t __err__ = (call);                      \
@@ -50,7 +59,7 @@ typedef enum {
     IF_FILTER_ERROR,
 
     // Parallel / MPI errors
-    IF_MPI_ERROR,
+    IF_MPI_ERROR, // WARN: MPI support is not planned.
     IF_OMP_ERROR,
     IF_CUDA_ERROR,
     IF_HIP_ERROR,

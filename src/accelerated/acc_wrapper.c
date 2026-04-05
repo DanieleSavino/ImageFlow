@@ -33,7 +33,7 @@ IF_error_t IFACC_check_system() {
 #ifdef _CUDA_ACC
     {
         int n = 0;
-        IFCU_getDevices(&n);
+        IF_CHECK(IFCU_getDevices(&n));
         if (n > 0) {
             acc_comp = CUDA_ACC;
             backend = (IF_backend_t){
@@ -75,13 +75,13 @@ IF_error_t IFACC_check_system() {
     return IF_SUCCESS;
 }
 
-static inline IF_error_t check_comp() {
+NODISCARD static inline IF_error_t check_comp() {
     if (acc_comp == UNDEF)       IF_CHECK(IFACC_check_system());
     if (acc_comp == NO_ACC)      return IF_DEVICE_ERROR;
     return IF_SUCCESS;
 }
 
-IF_error_t IFACC_available() {
+int IFACC_available() {
     IF_error_t err = check_comp();
     return err == IF_SUCCESS;
 }

@@ -15,11 +15,11 @@ typedef struct {
     float *data;
 } IF_image_t;
 
-IF_error_t IF_loadImage(IF_image_t *img, const char *path);
+NODISCARD IF_error_t IF_loadImage(IF_image_t *img, const char *path);
 
-IF_error_t IF_storeImage(IF_image_t *img, const char *path);
+NODISCARD IF_error_t IF_storeImage(IF_image_t *img, const char *path);
 
-IF_error_t IF_freeImage(IF_image_t *img);
+NODISCARD IF_error_t IF_freeImage(IF_image_t *img);
 
 #ifdef __cplusplus
 }
