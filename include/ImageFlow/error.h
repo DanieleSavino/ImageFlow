@@ -1,13 +1,26 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
+
+#if defined(__GNUC__) || defined(__clang__)
+#define NODISCARD __attribute__((warn_unused_result))
+// WARN: MSC is not supported.
+#elif defined(_MSC_VER)
+#define NODISCARD _Check_return_
+#else
+#define NODISCARD
+#endif
 
 #define IF_CHECK(call)                              \
     do {                                                 \
         IF_error_t __err__ = (call);                      \
         if (__err__ != IF_SUCCESS) {                      \
-            fprintf(stderr, "ImageFlow ERROR: %s\n",    \
-                    IF_strerror(__err__));               \
+            fprintf(stderr, "ImageFlow ERROR: %s | In file: %s, at line %d\n",    \
+                    IF_strerror(__err__), __FILE__, __LINE__);               \
             return __err__;                               \
         }                                               \
     } while(0)
@@ -46,8 +59,10 @@ typedef enum {
     IF_FILTER_ERROR,
 
     // Parallel / MPI errors
-    IF_MPI_ERROR,
+    IF_MPI_ERROR, // WARN: MPI support is not planned.
     IF_OMP_ERROR,
+    IF_CUDA_ERROR,
+    IF_HIP_ERROR,
 
     // General / unknown
     IF_UNKNOWN_ERROR
@@ -56,3 +71,7 @@ typedef enum {
 const char *IF_strerror(IF_error_t e);
 
 void IF_logError(FILE *stream, IF_error_t e);
+
+#ifdef __cplusplus
+}
+#endif
