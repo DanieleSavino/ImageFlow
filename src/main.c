@@ -1,6 +1,5 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
-#include "ImageFlow/accelerated/acc_wrapper.h"
 #include "ImageFlow/pipeline.h"
 #include "ImageFlow/scheduler/scheduler.h"
 
