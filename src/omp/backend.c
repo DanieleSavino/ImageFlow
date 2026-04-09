@@ -1,6 +1,7 @@
 #include "ImageFlow/omp/backend.h"
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -53,7 +54,7 @@ IF_error_t IFOMP_brightness(IF_image_t *img, float factor) {
 
     #pragma omp parallel for simd schedule(static)
     for (size_t i = 0; i < n; i++) {
-        img->data[i] *= factor;
+        img->data[i] = fminf(img->data[i] * factor, 1.0f);
     }
 
     return IF_SUCCESS;
