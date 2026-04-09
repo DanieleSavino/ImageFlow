@@ -4,6 +4,7 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include <cstddef>
+#include <cmath>
 
 IF_error_t IFHIP_getDevices(int *hip_dev) {
     hipError_t _ = hipGetDeviceCount(hip_dev);
@@ -71,9 +72,9 @@ static __global__ void IFHIPK_brightness(IF_image_t *img, float factor) {
     int idx = (y * w + x) * c;
     float *pixel = img->data + idx;
 
-    pixel[0] *= factor;
-    pixel[1] *= factor;
-    pixel[2] *= factor;
+    pixel[0] = fminf(pixel[0] * factor, 1.0f);
+    pixel[1] = fminf(pixel[1] * factor, 1.0f);
+    pixel[2] = fminf(pixel[2] * factor, 1.0f);
 }
 
 IF_error_t IFHIP_load(const IF_image_t *img, IF_image_t **hip_img) {
@@ -118,7 +119,7 @@ IF_error_t IFHIP_retrieve(IF_image_t **hip_img, IF_image_t *img_out) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFHIP_loaded_grayScale(const IF_image_t *img, IF_image_t *hip_img) {
+IF_error_t IFHIP_loaded_grayScale(IF_image_t *img, IF_image_t *hip_img) {
     if(hip_img == NULL) {
         return IF_NULL_POINTER;
     }
@@ -149,7 +150,7 @@ IF_error_t IFHIP_grayScale(IF_image_t *img) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFHIP_loaded_invert(const IF_image_t *img, IF_image_t *hip_img) {
+IF_error_t IFHIP_loaded_invert(IF_image_t *img, IF_image_t *hip_img) {
     if(hip_img == NULL) {
         return IF_NULL_POINTER;
     }
@@ -180,7 +181,7 @@ IF_error_t IFHIP_invert(IF_image_t *img) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFHIP_loaded_brightness(const IF_image_t *img, IF_image_t *hip_img, float factor) {
+IF_error_t IFHIP_loaded_brightness(IF_image_t *img, IF_image_t *hip_img, float factor) {
     if(hip_img == NULL) {
         return IF_NULL_POINTER;
     }

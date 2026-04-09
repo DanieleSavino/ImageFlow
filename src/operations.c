@@ -1,41 +1,67 @@
 #include "ImageFlow/operations.h"
 #include "ImageFlow/accelerated/acc_wrapper.h"
 #include "ImageFlow/error.h"
+#include "ImageFlow/io/image.h"
 #include "ImageFlow/omp/backend.h"
+#include <math.h>
 
 /**
- * FIXME: For now we just do "if there's a gpu then use it else fallback"
- * the goal of the project is to have a builder pattern like api that actively
- * schedules the requests, using the loaded api when possible, that's why there are 2 wrappers,
- * so for example the cpu might handle simple jobs like resizing, trimming and easy jobs on small images.
- *
- * WARN: The direct IF_operationX() api will probably be deprecated after the transition to the
- * builder pattern api is complete.
+ * FIXME: Explain why double wrapper
  */
 
-IF_error_t IF_grayScale(IF_image_t *img) {
-    if(IFACC_available()) {
-        return IFACC_grayScale(img);
+NODISCARD IF_error_t IF_op_execute(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img) {
+    // FIXME: Check out of bounds (would be pedantic)
+    return IF_op_dispatcher[op->supp_op](op, img, cuda_img);
+}
+
+NODISCARD IF_error_t IF_grayscale(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img) {
+    if(op->supp_op != IF_OP_GRAYSCALE) {
+        return IF_INVALID_ARGS;
     }
-    else {
-        return IFOMP_grayScale(img);
+
+    switch (op->pref_dev) {
+        case IF_DEV_GPU:
+            return IFACC_loaded_grayScale(img, cuda_img);
+        case IF_DEV_CPU:
+            return IFOMP_grayScale(img);
+        default:
+            return IF_INVALID_ARGS;
     }
 }
 
-IF_error_t IF_invert(IF_image_t *img) {
-    if(IFACC_available()) {
-        return IFACC_invert(img);
+NODISCARD IF_error_t IF_invert(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img) {
+    if(op->supp_op != IF_OP_INVERT) {
+        return IF_INVALID_ARGS;
     }
-    else {
-        return IFOMP_invert(img);
+
+    switch (op->pref_dev) {
+        case IF_DEV_GPU:
+            return IFACC_loaded_invert(img, cuda_img);
+        case IF_DEV_CPU:
+            return IFOMP_invert(img);
+        default:
+            return IF_INVALID_ARGS;
     }
 }
 
-IF_error_t IF_brightness(IF_image_t *img, float factor) {
-    if(IFACC_available()) {
-        return IFACC_brightness(img, factor);
+NODISCARD IF_error_t IF_brightness(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img) {
+    if(op->supp_op != IF_OP_BRIGHTNESS) {
+        return IF_INVALID_ARGS;
     }
-    else {
-        return IFOMP_brightness(img, factor);
+
+    float factor = op->op_args.float_factor.factor;
+    if(!isfinite(factor)) {
+        return IF_INVALID_ARGS;
     }
+
+    switch (op->pref_dev) {
+        case IF_DEV_GPU:
+            return IFACC_loaded_brightness(img, cuda_img, factor);
+        case IF_DEV_CPU:
+            return IFOMP_brightness(img, factor);
+        default:
+            return IF_INVALID_ARGS;
+    }
+
+    return IF_SUCCESS;
 }

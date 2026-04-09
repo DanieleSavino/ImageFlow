@@ -1,4 +1,5 @@
 #include "ImageFlow/error.h"
+#include "ImageFlow/io/image.h"
 #include <ImageFlow/accelerated/acc_wrapper.h>
 
 #ifdef _CUDA_ACC
@@ -17,9 +18,9 @@ typedef struct {
     IF_error_t (*grayScale)(IF_image_t *);
     IF_error_t (*invert)(IF_image_t *);
     IF_error_t (*brightness)(IF_image_t *, float);
-    IF_error_t (*loaded_grayScale)(const IF_image_t *, IF_image_t *);
-    IF_error_t (*loaded_invert)(const IF_image_t *, IF_image_t *);
-    IF_error_t (*loaded_brightness)(const IF_image_t *, IF_image_t *, float);
+    IF_error_t (*loaded_grayScale)(IF_image_t *, IF_image_t *);
+    IF_error_t (*loaded_invert)(IF_image_t *, IF_image_t *);
+    IF_error_t (*loaded_brightness)(IF_image_t *, IF_image_t *, float);
 } IF_backend_t;
 
 static IF_acc_t acc_comp = UNDEF;
@@ -103,12 +104,12 @@ IF_error_t IFACC_invert(IF_image_t *img) {
 IF_error_t IFACC_brightness(IF_image_t *img, float f) {
     IF_CHECK(check_comp()); return backend.brightness(img, f);
 }
-IF_error_t IFACC_loaded_grayScale(const IF_image_t *img, IF_image_t *dev) {
+IF_error_t IFACC_loaded_grayScale(IF_image_t *img, IF_image_t *dev) {
     IF_CHECK(check_comp()); return backend.loaded_grayScale(img, dev);
 }
-IF_error_t IFACC_loaded_invert(const IF_image_t *img, IF_image_t *dev) {
+IF_error_t IFACC_loaded_invert(IF_image_t *img, IF_image_t *dev) {
     IF_CHECK(check_comp()); return backend.loaded_invert(img, dev);
 }
-IF_error_t IFACC_loaded_brightness(const IF_image_t *img, IF_image_t *dev, float f) {
+IF_error_t IFACC_loaded_brightness(IF_image_t *img, IF_image_t *dev, float f) {
     IF_CHECK(check_comp()); return backend.loaded_brightness(img, dev, f);
 }
