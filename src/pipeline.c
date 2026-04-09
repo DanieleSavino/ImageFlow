@@ -3,17 +3,17 @@
 #include "ImageFlow/operations.h"
 #include <stddef.h>
 
-#define CHECK_PIPE_REF(pipe) \
+#define CHECK_FLOW(flow) \
     do { \
-        if(pipe == NULL || pipe->buff == NULL)  \
+        if(flow == NULL || flow->buff == NULL)  \
             return IF_NULL_POINTER; \
-        if(pipe->_size <= 0) \
+        if(flow->_size <= 0) \
             return  IF_INVALID_ARGS; \
     } while(0)
 
 
-NODISCARD IF_error_t IF_pipe_init_size(IF_Pipeline_t **pipe, int initial_size) {
-    if(pipe == NULL)
+NODISCARD IF_error_t IF_flow_init_size(IF_Flow_t *flow, int initial_size) {
+    if(flow == NULL)
         return IF_NULL_POINTER;
 
     IF_Pipeline_t *tmp_pipe = NULL;
@@ -24,7 +24,7 @@ NODISCARD IF_error_t IF_pipe_init_size(IF_Pipeline_t **pipe, int initial_size) {
     tmp_pipe->_size = initial_size;
     tmp_pipe->len = 0;
 
-    *pipe = tmp_pipe;
+    *flow = tmp_pipe;
 
     return IF_SUCCESS;
 
@@ -35,76 +35,79 @@ NODISCARD IF_error_t IF_pipe_init_size(IF_Pipeline_t **pipe, int initial_size) {
 
 #define INIT_SIZE 10
 
-NODISCARD IF_error_t IF_pipe_init(IF_Pipeline_t **pipe) {
-    return IF_pipe_init_size(pipe, INIT_SIZE);
+IF_error_t IF_flow_init(IF_Flow_t *flow) {
+    IF_CHECK(IF_flow_init_size(flow, INIT_SIZE));
+
+    return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_pipe_push(IF_Pipeline_t *pipe, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args) {
-    CHECK_PIPE_REF(pipe);
+NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args) {
+    CHECK_FLOW(flow);
 
-    if(pipe->len == pipe->_size) {
-        IF_REALLOC(pipe->buff, pipe->_size * 2);
-        pipe->_size *= 2;
+    if(flow->len == flow->_size) {
+        IF_REALLOC(flow->buff, flow->_size * 2);
+        flow->_size *= 2;
     }
 
-    IF_Operation_t *op = pipe->buff + pipe->len;
+    IF_Operation_t *op = flow->buff + flow->len;
 
     op->supp_op = supp_op;
     op->op_args = op_args;
     op->op_type = op_type;
+    op->pref_dev = pref_dev;
 
     // WARN: This makes a copy, the union should be pretty small.
     op->op_args = op_args;
 
-    pipe->len++;
+    flow->len++;
 
     return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_pipe_get(IF_Pipeline_t *pipe, size_t i, IF_Operation_t **operation) {
-    CHECK_PIPE_REF(pipe);
+NODISCARD IF_error_t IF_flow_get(IF_Flow_t flow, size_t i, IF_Operation_t **operation) {
+    CHECK_FLOW(flow);
 
-    if(pipe->len == 0) {
+    if(flow->len == 0) {
         return IF_INVALID_ARGS;
     }
 
-    *operation = pipe->buff + i;
+    *operation = flow->buff + i;
 
     return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_pipe_free(IF_Pipeline_t *pipe) {
-    CHECK_PIPE_REF(pipe);
+IF_error_t IF_flow_free(IF_Flow_t flow) {
+    CHECK_FLOW(flow);
 
-    free(pipe->buff);
-    free(pipe);
+    free(flow->buff);
+    free(flow);
 
     return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_pipe_push_grayscale(IF_Pipeline_t *pipe) {
-    CHECK_PIPE_REF(pipe);
+IF_error_t IF_flow_grayscale(IF_Flow_t flow) {
+    CHECK_FLOW(flow);
 
     IF_OpArgs_t empty = { .empty = {} };
-    IF_CHECK(IF_pipe_push(pipe, IF_OP_GRAYSCALE, IF_TRAVERSAL_POINT, IF_DEV_GPU, empty));
+    IF_CHECK(IF_flow_push(flow, IF_OP_GRAYSCALE, IF_TRAVERSAL_POINT, IF_DEV_GPU, empty));
 
     return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_pipe_push_invert(IF_Pipeline_t *pipe) {
-    CHECK_PIPE_REF(pipe);
+IF_error_t IF_flow_invert(IF_Flow_t flow) {
+    CHECK_FLOW(flow);
 
     IF_OpArgs_t empty = { .empty = {} };
-    IF_CHECK(IF_pipe_push(pipe, IF_OP_INVERT, IF_TRAVERSAL_POINT, IF_DEV_GPU, empty));
+    IF_CHECK(IF_flow_push(flow, IF_OP_INVERT, IF_TRAVERSAL_POINT, IF_DEV_GPU, empty));
 
     return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_pipe_push_brightness(IF_Pipeline_t *pipe, float factor) {
-    CHECK_PIPE_REF(pipe);
+IF_error_t IF_flow_brightness(IF_Flow_t flow, float factor) {
+    CHECK_FLOW(flow);
 
-    IF_OpArgs_t args = { .brightness = { .factor = factor } };
-    IF_CHECK(IF_pipe_push(pipe, IF_OP_BRIGHTNESS, IF_TRAVERSAL_POINT, IF_DEV_GPU, args));
+    IF_OpArgs_t args = { .float_factor = { .factor = factor } };
+    IF_CHECK(IF_flow_push(flow, IF_OP_BRIGHTNESS, IF_TRAVERSAL_POINT, IF_DEV_GPU, args));
 
     return IF_SUCCESS;
 }

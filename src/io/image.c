@@ -1,5 +1,6 @@
 #include "ImageFlow/io/image.h"
 #include "ImageFlow/error.h"
+#include <stdatomic.h>
 #include <string.h>
 
 IF_error_t IF_loadImageFallback(IF_image_t *img, const char *path) {
@@ -79,6 +80,25 @@ IF_error_t IF_storeImage(IF_image_t *img, const char *path) {
 
     free(bytes);
     if (!success) return IF_FILE_WRITE_ERROR;
+
+    return IF_SUCCESS;
+}
+
+NODISCARD IF_error_t IF_copyImage(const IF_image_t *img_in, IF_image_t *img_out) {
+    if (!img_in || !img_out || !img_in->data)
+        return IF_NULL_POINTER;
+
+    img_out->width = img_in->width;
+    img_out->height = img_in->height;
+    img_out->channels = img_in->channels;
+
+    size_t total_elements = (size_t)img_out->width * img_out->height * img_out->channels;
+    size_t total_size = total_elements * sizeof(float);
+
+    img_out->data = malloc(total_size);
+    if (!img_out->data) return IF_OUT_OF_MEMORY;
+
+    memcpy(img_out->data, img_in->data, total_elements * sizeof(float));
 
     return IF_SUCCESS;
 }

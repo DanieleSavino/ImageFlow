@@ -32,7 +32,7 @@ typedef enum {
 
 typedef union {
     struct {  } empty;                   // For no args operations
-    struct { float factor; } brightness; // For brightness
+    struct { float factor; } float_factor; // For brightness
 
     /** INFO: Add others for new operations */
     /** WARN: MPI support is not planned, but this would make it a nightmare */
@@ -42,7 +42,8 @@ typedef union {
 typedef enum {
     IF_OP_GRAYSCALE,
     IF_OP_INVERT,
-    IF_OP_BRIGHTNESS
+    IF_OP_BRIGHTNESS,
+    _IF_OP_LEN
 } IF_SupportedOp_t;
 
 typedef struct {
@@ -52,9 +53,19 @@ typedef struct {
     IF_OpArgs_t op_args;
 } IF_Operation_t;
 
-NODISCARD IF_error_t IF_grayScale(IF_image_t *img);
-NODISCARD IF_error_t IF_invert(IF_image_t *img);
-NODISCARD IF_error_t IF_brightness(IF_image_t *img, float factor);
+typedef IF_error_t (*IF_op_func_ptr_t)(IF_Operation_t*, IF_image_t*, IF_image_t*);
+
+NODISCARD IF_error_t IF_op_execute(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img);
+
+NODISCARD IF_error_t IF_grayscale(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img);
+NODISCARD IF_error_t IF_invert(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img);
+NODISCARD IF_error_t IF_brightness(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img);
+
+static const IF_op_func_ptr_t IF_op_dispatcher[_IF_OP_LEN] = {
+    [IF_OP_GRAYSCALE]  = IF_grayscale,
+    [IF_OP_INVERT]     = IF_invert,
+    [IF_OP_BRIGHTNESS] = IF_brightness
+};
 
 #ifdef __cplusplus
 }

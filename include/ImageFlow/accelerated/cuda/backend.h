@@ -20,18 +20,36 @@ extern "C" {
         }                                                                      \
     } while (0)
 
-#define IF_CUDA_KERNEL_CHECK()                                                    \
-    do {                                                                       \
-        cudaError_t __err__ = cudaGetLastError();                                  \
-        if (__err__ != cudaSuccess) {                                              \
-            fprintf(stderr,                                                    \
-                    "CUDA Kernel Launch Error: %s in file %s at line %d\n",    \
-                    cudaGetErrorString(__err__),                                   \
-                    __FILE__,                                                  \
-                    __LINE__);                                                 \
-            return IF_CUDA_ERROR;                                               \
-        }                                                                      \
-    } while (0)
+#ifdef DEBUG
+    #define IF_CUDA_KERNEL_CHECK()                                             \
+        do {                                                                   \
+            cudaError_t __err = cudaGetLastError();                            \
+            if (__err != cudaSuccess) {                                        \
+                fprintf(stderr, "CUDA Launch Error [%s]: %s\nFile: %s | Line: %d\n", \
+                        cudaGetErrorName(__err), cudaGetErrorString(__err),    \
+                        __FILE__, __LINE__);                                   \
+                return IF_KERNEL_FAILURE;                                      \
+            }                                                                  \
+            __err = cudaDeviceSynchronize();                                   \
+            if (__err != cudaSuccess) {                                        \
+                fprintf(stderr, "CUDA Execution Error [%s]: %s\nFile: %s | Line: %d\n", \
+                        cudaGetErrorName(__err), cudaGetErrorString(__err),    \
+                        __FILE__, __LINE__);                                   \
+                return IF_KERNEL_FAILURE;                                      \
+            }                                                                  \
+        } while (0)
+#else
+    #define IF_CUDA_KERNEL_CHECK()                                             \
+        do {                                                                   \
+            cudaError_t __err = cudaGetLastError();                            \
+            if (__err != cudaSuccess) {                                        \
+                fprintf(stderr, "CUDA Launch Error [%s]: %s\nFile: %s | Line: %d\n", \
+                        cudaGetErrorName(__err), cudaGetErrorString(__err),    \
+                        __FILE__, __LINE__);                                   \
+                return IF_KERNEL_FAILURE;                                      \
+            }                                                                  \
+        } while (0)
+#endif
 
 NODISCARD IF_error_t IFCU_getDevices(int *cuda_dev);
 
@@ -42,9 +60,9 @@ NODISCARD IF_error_t IFCU_grayScale(IF_image_t *img);
 NODISCARD IF_error_t IFCU_invert(IF_image_t *img);
 NODISCARD IF_error_t IFCU_brightness(IF_image_t *img, float factor);
 
-NODISCARD IF_error_t IFCU_loaded_grayScale(const IF_image_t *img, IF_image_t *cuda_img);
-NODISCARD IF_error_t IFCU_loaded_invert(const IF_image_t *img, IF_image_t *cuda_img);
-NODISCARD IF_error_t IFCU_loaded_brightness(const IF_image_t *img, IF_image_t *cuda_img, float factor);
+NODISCARD IF_error_t IFCU_loaded_grayScale(IF_image_t *img, IF_image_t *cuda_img);
+NODISCARD IF_error_t IFCU_loaded_invert(IF_image_t *img, IF_image_t *cuda_img);
+NODISCARD IF_error_t IFCU_loaded_brightness(IF_image_t *img, IF_image_t *cuda_img, float factor);
 
 #ifdef __cplusplus
 }

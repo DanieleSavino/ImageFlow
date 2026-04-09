@@ -16,9 +16,8 @@ typedef struct {
 } IF_image_t;
 
 NODISCARD IF_error_t IF_loadImage(IF_image_t *img, const char *path);
-
 NODISCARD IF_error_t IF_storeImage(IF_image_t *img, const char *path);
-
+NODISCARD IF_error_t IF_copyImage(const IF_image_t *img_in, IF_image_t *img_out);
 NODISCARD IF_error_t IF_freeImage(IF_image_t *img);
 
 #ifdef __cplusplus

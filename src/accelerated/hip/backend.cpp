@@ -118,7 +118,7 @@ IF_error_t IFHIP_retrieve(IF_image_t **hip_img, IF_image_t *img_out) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFHIP_loaded_grayScale(const IF_image_t *img, IF_image_t *hip_img) {
+IF_error_t IFHIP_loaded_grayScale(IF_image_t *img, IF_image_t *hip_img) {
     if(hip_img == NULL) {
         return IF_NULL_POINTER;
     }
@@ -149,7 +149,7 @@ IF_error_t IFHIP_grayScale(IF_image_t *img) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFHIP_loaded_invert(const IF_image_t *img, IF_image_t *hip_img) {
+IF_error_t IFHIP_loaded_invert(IF_image_t *img, IF_image_t *hip_img) {
     if(hip_img == NULL) {
         return IF_NULL_POINTER;
     }
@@ -180,7 +180,7 @@ IF_error_t IFHIP_invert(IF_image_t *img) {
     return IF_SUCCESS;
 }
 
-IF_error_t IFHIP_loaded_brightness(const IF_image_t *img, IF_image_t *hip_img, float factor) {
+IF_error_t IFHIP_loaded_brightness(IF_image_t *img, IF_image_t *hip_img, float factor) {
     if(hip_img == NULL) {
         return IF_NULL_POINTER;
     }

@@ -14,18 +14,19 @@ typedef struct {
     size_t _size;
 } IF_Pipeline_t;
 
-NODISCARD IF_error_t IF_pipe_init_size(IF_Pipeline_t **pipe, int initial_size);
-NODISCARD IF_error_t IF_pipe_init(IF_Pipeline_t **pipe);
+typedef IF_Pipeline_t* IF_Flow_t;
 
-// WARN: This model trades memory usage for simplicity and 0-copy, this list is not expected to be huge so should be fine.
-NODISCARD IF_error_t IF_pipe_push(IF_Pipeline_t *pipe, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args);
-NODISCARD IF_error_t IF_pipe_get(IF_Pipeline_t *pipe, size_t i, IF_Operation_t **operation);
+NODISCARD IF_error_t IF_flow_init_size(IF_Flow_t *flow, int initial_size);
+IF_error_t IF_flow_init(IF_Flow_t *flow);
 
-NODISCARD IF_error_t IF_pipe_free(IF_Pipeline_t *pipe);
+NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args);
+NODISCARD IF_error_t IF_flow_get(IF_Flow_t flow, size_t i, IF_Operation_t **operation);
 
-NODISCARD IF_error_t IF_pipe_push_grayscale(IF_Pipeline_t *pipe);
-NODISCARD IF_error_t IF_pipe_push_invert(IF_Pipeline_t *pipe);
-NODISCARD IF_error_t IF_pipe_push_brightness(IF_Pipeline_t *pipe, float factor);
+IF_error_t IF_flow_free(IF_Flow_t flow);
+
+IF_error_t IF_flow_grayscale(IF_Flow_t flow);
+IF_error_t IF_flow_invert(IF_Flow_t flow);
+IF_error_t IF_flow_brightness(IF_Flow_t flow, float factor);
 
 #ifdef __cplusplus
 }

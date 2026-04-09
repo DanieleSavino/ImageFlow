@@ -26,9 +26,9 @@ NODISCARD IF_error_t IFACC_grayScale(IF_image_t *img);
 NODISCARD IF_error_t IFACC_invert(IF_image_t *img);
 NODISCARD IF_error_t IFACC_brightness(IF_image_t *img, float factor);
 
-NODISCARD IF_error_t IFACC_loaded_grayScale(const IF_image_t *img, IF_image_t *cuda_img);
-NODISCARD IF_error_t IFACC_loaded_invert(const IF_image_t *img, IF_image_t *cuda_img);
-NODISCARD IF_error_t IFACC_loaded_brightness(const IF_image_t *img, IF_image_t *cuda_img, float factor);
+NODISCARD IF_error_t IFACC_loaded_grayScale(IF_image_t *img, IF_image_t *cuda_img);
+NODISCARD IF_error_t IFACC_loaded_invert(IF_image_t *img, IF_image_t *cuda_img);
+NODISCARD IF_error_t IFACC_loaded_brightness(IF_image_t *img, IF_image_t *cuda_img, float factor);
 
 #ifdef __cplusplus
 }
