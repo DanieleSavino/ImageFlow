@@ -25,9 +25,48 @@ extern "C" {
         }                                               \
     } while(0)
 
+#define IF_MALLOC(ptr, size)                         \
+    do {                                             \
+        (ptr) = malloc(size);                        \
+        if ((ptr) == NULL && (size) > 0) {           \
+            return IF_OUT_OF_MEMORY;                 \
+        }                                            \
+    } while (0)
+
+#define IF_MALLOC_LABEL(ptr, size, label)            \
+    do {                                             \
+        (ptr) = malloc(size);                        \
+        if ((ptr) == NULL && (size) > 0) {           \
+            goto label;                              \
+        }                                            \
+    } while (0)
+
+#define IF_REALLOC(ptr, size)                    \
+    do {                                         \
+        void *tmp_realloc_ptr = realloc(ptr, size); \
+        if (tmp_realloc_ptr == NULL && (size) > 0) { \
+            return IF_OUT_OF_MEMORY;                          \
+        }                                        \
+        (ptr) = tmp_realloc_ptr;                 \
+    } while (0)
+
+#define IF_REALLOC_LABEL(ptr, size, label)             \
+    do {                                         \
+        void *tmp_realloc_ptr = realloc(ptr, size); \
+        if (tmp_realloc_ptr == NULL && (size) > 0) { \
+            goto label;                          \
+        }                                        \
+        (ptr) = tmp_realloc_ptr;                 \
+    } while (0)
+
+
+
 typedef enum {
     // Success
     IF_SUCCESS = 0x0,
+
+    // Invalid args
+    IF_INVALID_ARGS,
 
     // File / I/O errors
     IF_FILE_NOT_FOUND,

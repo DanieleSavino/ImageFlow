@@ -17,6 +17,41 @@ extern "C" {
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 
+typedef enum {
+    IF_DEV_CPU,
+    IF_DEV_GPU
+} IF_DevType_t;
+
+typedef enum {
+    IF_TRAVERSAL_METADATA,   // metadata only operation, like vertical resize
+    IF_TRAVERSAL_POINT,      // 1:1 mapping (Grayscale, Brightness)
+    IF_TRAVERSAL_STENCIL,    // Neighborhood (Blur, Sobel)
+    IF_TRAVERSAL_REDUCTION,  // Global to Scalar (Min/Max/Avg)
+    IF_TRAVERSAL_MORPH       // Geometric (Rotate, horizontal resize)
+} IF_OpType_t;
+
+typedef union {
+    struct {  } empty;                   // For no args operations
+    struct { float factor; } brightness; // For brightness
+
+    /** INFO: Add others for new operations */
+    /** WARN: MPI support is not planned, but this would make it a nightmare */
+
+} IF_OpArgs_t;
+
+typedef enum {
+    IF_OP_GRAYSCALE,
+    IF_OP_INVERT,
+    IF_OP_BRIGHTNESS
+} IF_SupportedOp_t;
+
+typedef struct {
+    IF_SupportedOp_t supp_op;
+    IF_OpType_t op_type;
+    IF_DevType_t pref_dev;
+    IF_OpArgs_t op_args;
+} IF_Operation_t;
+
 NODISCARD IF_error_t IF_grayScale(IF_image_t *img);
 NODISCARD IF_error_t IF_invert(IF_image_t *img);
 NODISCARD IF_error_t IF_brightness(IF_image_t *img, float factor);
