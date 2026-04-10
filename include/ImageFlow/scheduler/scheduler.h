@@ -55,9 +55,8 @@ extern "C" {
  * @brief Identifies the scheduling strategy used to execute a pipeline.
  */
 typedef enum {
-    IF_SCHEDULER_LINEAR /**< Naive sequential scheduler. Executes operations in
-                             pipeline order, managing device transfers at
-                             CPU<->GPU boundary crossings. */
+    IF_SCHEDULER_CPU,   /**< CPU-only */
+    IF_SCHEDULER_LINEAR /**< Naive sequential scheduler */
 } IF_Scheduler_t;
 
 /**
