@@ -106,7 +106,6 @@ IF_error_t IFACC_brightness(IF_image_t *img, float f) {
     IF_CHECK(check_comp()); return backend.brightness(img, f);
 }
 IF_error_t IFACC_loaded_grayScale(IF_image_t *img, IF_image_t *dev) {
-    printf("Running gs on gpu\n");
     IF_CHECK(check_comp()); return backend.loaded_grayScale(img, dev);
 }
 IF_error_t IFACC_loaded_invert(IF_image_t *img, IF_image_t *dev) {

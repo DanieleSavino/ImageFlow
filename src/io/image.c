@@ -1,6 +1,7 @@
 #include "ImageFlow/io/image.h"
 #include "ImageFlow/error.h"
 #include <stdatomic.h>
+#include <stddef.h>
 #include <string.h>
 
 IF_error_t IF_loadImageFallback(IF_image_t *img, const char *path) {
@@ -11,11 +12,12 @@ IF_error_t IF_loadImageFallback(IF_image_t *img, const char *path) {
     // allocate float buffer
     float *data = malloc(w * h * c * sizeof(float));
     if(!data) {
+        stbi_image_free(data_u8);
         return IF_OUT_OF_MEMORY;
     }
 
     #pragma omp parallel for simd schedule(static)
-    for (int i = 0; i < w * h * c; i++)
+    for (size_t i = 0; i < w * h * c; i++)
         data[i] = data_u8[i] / 255.0f;
 
     stbi_image_free(data_u8);
