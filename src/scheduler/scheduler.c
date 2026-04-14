@@ -5,6 +5,8 @@
 #include "ImageFlow/scheduler/linear.h"
 #include "ImageFlow/scheduler/reorder.h"
 
+#define _DEFAULT_SCHED IF_SCHEDULER_REORDER_O0
+
 NODISCARD IF_error_t IF_flow_run_sched(IF_Flow_t flow, const IF_image_t *img_in, IF_Scheduler_t sched, IF_image_t *img_out) {
     IF_CHECK_SCHED_PARAMS(flow, img_in, img_out);
 
@@ -31,5 +33,5 @@ NODISCARD IF_error_t IF_flow_run_sched(IF_Flow_t flow, const IF_image_t *img_in,
 }
 
 NODISCARD IF_error_t IF_flow_run(IF_Flow_t flow, const IF_image_t *img_in, IF_image_t *img_out) {
-    return IF_flow_run_sched(flow, img_in, IF_SCHEDULER_LINEAR, img_out);
+    return IF_flow_run_sched(flow, img_in, _DEFAULT_SCHED, img_out);
 }
