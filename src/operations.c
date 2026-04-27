@@ -5,13 +5,13 @@
 #include "ImageFlow/omp/backend.h"
 #include <math.h>
 
-/**
- * FIXME: Explain why double wrapper
- */
-
 NODISCARD IF_error_t IF_op_execute(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img) {
-    // FIXME: Check out of bounds (would be pedantic)
-    return IF_op_dispatcher[op->supp_op](op, img, cuda_img);
+    if(op->supp_op >= _IF_OP_LEN) {
+        return IF_INVALID_ARGS;
+    }
+
+    IF_op_dispatcher[op->supp_op](op, img, cuda_img);
+    return IF_SUCCESS;
 }
 
 NODISCARD IF_error_t IF_grayscale(IF_Operation_t *op, IF_image_t *img, IF_image_t *cuda_img) {

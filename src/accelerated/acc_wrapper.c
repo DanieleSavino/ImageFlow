@@ -1,6 +1,7 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include <ImageFlow/accelerated/acc_wrapper.h>
+#include <stdio.h>
 
 #ifdef _CUDA_ACC
 #include "ImageFlow/accelerated/cuda/backend.h"

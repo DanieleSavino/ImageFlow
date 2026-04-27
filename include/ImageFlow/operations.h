@@ -91,6 +91,19 @@ typedef struct {
     IF_OpArgs_t      op_args; /**< Operation-specific arguments. */
 } IF_Operation_t;
 
+static const char* IF_strop(IF_SupportedOp_t op) {
+    switch (op) {
+        case IF_OP_GRAYSCALE:
+            return "Grayscale";
+        case IF_OP_INVERT:
+            return "Invert";
+        case IF_OP_BRIGHTNESS:
+            return "Brightness";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 /**
  * @brief Function pointer type for operation implementations.
  *

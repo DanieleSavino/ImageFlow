@@ -51,7 +51,7 @@ extern "C" {
  * @return Any error code propagated from IF_copyImage, IFACC_load,
  *         IFACC_retrieve, or IF_op_execute.
  */
-NODISCARD IF_error_t IF_linear_execute(IF_Pipeline_t *pipe, const IF_image_t *img_in, IF_image_t *img_out);
+NODISCARD IF_error_t IF_linear_execute(IF_Flow_t flow, const IF_image_t *img_in, IF_image_t *img_out);
 
 #ifdef __cplusplus
 }

@@ -45,7 +45,7 @@ NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_O
     CHECK_FLOW(flow);
 
     if(flow->len == flow->_size) {
-        IF_REALLOC(flow->buff, flow->_size * 2);
+        IF_REALLOC(flow->buff, flow->_size * 2 * sizeof(IF_Operation_t));
         flow->_size *= 2;
     }
 
