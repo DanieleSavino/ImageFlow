@@ -11,6 +11,7 @@ A C image processing library with heterogeneous compute support. Automatically d
 - OpenMP CPU fallback when no GPU is available
 - Pipeline API — build a sequence of operations, run them against an image in one call
 - Automatic device management — H2D/D2H transfers are handled at CPU↔GPU boundaries inside the scheduler; callers don't touch device memory directly
+- Pipeline reordering optimizer — reorders operations before execution to minimize host↔device transfers, with four aggression levels (safe → stencil → reduction → morph)
 - C11 core with C++ support for GPU backends
 
 ## Building
@@ -81,17 +82,34 @@ IF_freeImage(&img_out);
 
 - probing GPU availability and falling back to CPU if needed
 - managing H2D and D2H transfers at CPU↔GPU boundary crossings
+- optionally reordering operations to minimize those transfers
 - executing each operation via the dispatch layer
 
 A specific scheduler can be selected explicitly:
 
 ```c
-IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_LINEAR, &img_out));
+IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_REORDER_O0, &img_out));
 ```
 
-Currently only `IF_SCHEDULER_LINEAR` is implemented — a naive sequential scheduler that runs operations in pipeline order and transfers data at device boundaries. It is the reference implementation against which future schedulers will be validated.
+### Schedulers
 
-More sophisticated schedulers (e.g. operation reordering, batching, overlap of transfers and compute) are the intended direction for this project.
+| Scheduler | Description |
+|---|---|
+| `IF_SCHEDULER_CPU` | CPU-only execution via OpenMP; skips GPU dispatch entirely |
+| `IF_SCHEDULER_LINEAR` | Naive sequential scheduler; runs operations in pipeline order and transfers data at device boundaries |
+| `IF_SCHEDULER_REORDER_O0` | Reorders pipeline at safe aggression (POINT and METADATA ops only), then runs linearly. **Default.** |
+| `IF_SCHEDULER_REORDER_O1` | Reorders allowing STENCIL ops to cross barriers, then runs linearly |
+| `IF_SCHEDULER_REORDER_O2` | Reorders allowing STENCIL and REDUCTION ops to cross barriers, then runs linearly |
+| `IF_SCHEDULER_REORDER_O3` | Reorders allowing all op types (including MORPH) to cross barriers, then runs linearly |
+
+The reorder optimizer groups operations by device affinity within each segment, minimizing host↔device transfers without changing observable output. The aggression level controls which operation types are allowed to cross segment barriers:
+
+- **O0 (safe)**: only POINT and METADATA ops are reordered — these are trivially commutative
+- **O1**: additionally allows STENCIL ops to cross barriers
+- **O2**: additionally allows REDUCTION ops to cross barriers
+- **O3**: additionally allows MORPH ops to cross barriers — use only if you understand the commutativity implications
+
+`IF_SCHEDULER_LINEAR` is the reference implementation and the baseline against which the reorder schedulers are validated. `IF_SCHEDULER_REORDER_O0` is the default used by `IF_flow_run`.
 
 #### Available operations
 
@@ -127,6 +145,8 @@ include/ImageFlow/
   scheduler/
     scheduler.h            — IF_flow_run / IF_flow_run_sched
     linear.h               — sequential scheduler implementation
+    reorder.h              — pipeline reordering optimizer
+    cpu.h                  — CPU-only scheduler
   accelerated/
     acc_wrapper.h          — runtime backend dispatcher (CUDA > HIP > OMP)
     cuda/backend.h         — CUDA backend
@@ -140,6 +160,8 @@ src/
   scheduler/
     scheduler.c
     linear.c
+    reorder.c
+    cpu.c
   accelerated/
     acc_wrapper.c
     cuda/backend.cu
