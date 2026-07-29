@@ -6,6 +6,7 @@
  *
  * @warning Adding pointer members here would complicate any future
  *          distributed (MPI) execution model significantly.
+ *          Plus MPI datatypes would be a pain.
  */
 typedef union {
     struct { char _unused; } empty;        /**< Placeholder for zero-argument operations. */
