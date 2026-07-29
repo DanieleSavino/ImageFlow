@@ -1,0 +1,3 @@
+IF_OP_DEF(GRAYSCALE, "Grayscale", POINT)
+IF_OP_DEF(INVERT, "Invert", POINT)
+IF_OP_DEF(BRIGHTNESS, "Brightness", POINT)

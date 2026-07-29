@@ -25,15 +25,22 @@ int main(void)
     IF_Flow_t flow;
     IF_flow_init(&flow);
 
-    IF_flow_invert(flow);
-    IF_flow_grayscale(flow);
-    IF_flow_brightness(flow, 1.5);
+    for(int _ = 0; _ < 100; _++) {
+        IF_flow_invert(flow);
+        IF_flow_grayscale(flow);
+        IF_flow_brightness(flow, 1.5);
+    }
 
     IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_LINEAR, &img_out));
 
     TIME_BLOCK(
         "GPU",
         IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_LINEAR, &img_out));
+    );
+
+    TIME_BLOCK(
+        "REORDER",
+        IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_REORDER_O3, &img_out));
     );
 
     IF_CHECK(IF_storeImage(&img_out, "out_gpu.jpg"));

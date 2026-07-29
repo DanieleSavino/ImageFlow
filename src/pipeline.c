@@ -1,7 +1,9 @@
 #include "ImageFlow/pipeline.h"
+#include "ImageFlow/devices/devices.h"
 #include "ImageFlow/error.h"
-#include "ImageFlow/operations.h"
+#include "ImageFlow/operations/operations.h"
 #include <stddef.h>
+#include <stdio.h>
 
 #define CHECK_FLOW(flow) \
     do { \
@@ -41,7 +43,7 @@ IF_error_t IF_flow_init(IF_Flow_t *flow) {
     return IF_SUCCESS;
 }
 
-NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args) {
+NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_DevType_t pref_dev, IF_OpArgs_t op_args) {
     CHECK_FLOW(flow);
 
     if(flow->len == flow->_size) {
@@ -53,7 +55,6 @@ NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_O
 
     op->supp_op = supp_op;
     op->op_args = op_args;
-    op->op_type = op_type;
     op->pref_dev = pref_dev;
 
     // WARN: This makes a copy, the union should be pretty small.
@@ -89,7 +90,7 @@ IF_error_t IF_flow_grayscale(IF_Flow_t flow) {
     CHECK_FLOW(flow);
 
     IF_OpArgs_t empty = { .empty = {} };
-    IF_CHECK(IF_flow_push(flow, IF_OP_GRAYSCALE, IF_TRAVERSAL_POINT, IF_DEV_GPU, empty));
+    IF_CHECK(IF_flow_push(flow, IF_OP_GRAYSCALE, IF_enabled_gpu(), empty));
 
     return IF_SUCCESS;
 }
@@ -98,7 +99,7 @@ IF_error_t IF_flow_invert(IF_Flow_t flow) {
     CHECK_FLOW(flow);
 
     IF_OpArgs_t empty = { .empty = {} };
-    IF_CHECK(IF_flow_push(flow, IF_OP_INVERT, IF_TRAVERSAL_POINT, IF_DEV_GPU, empty));
+    IF_CHECK(IF_flow_push(flow, IF_OP_INVERT, IF_enabled_gpu(), empty));
 
     return IF_SUCCESS;
 }
@@ -107,7 +108,7 @@ IF_error_t IF_flow_brightness(IF_Flow_t flow, float factor) {
     CHECK_FLOW(flow);
 
     IF_OpArgs_t args = { .float_factor = { .factor = factor } };
-    IF_CHECK(IF_flow_push(flow, IF_OP_BRIGHTNESS, IF_TRAVERSAL_POINT, IF_DEV_GPU, args));
+    IF_CHECK(IF_flow_push(flow, IF_OP_BRIGHTNESS, IF_enabled_gpu(), args));
 
     return IF_SUCCESS;
 }

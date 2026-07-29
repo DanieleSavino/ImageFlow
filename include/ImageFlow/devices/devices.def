@@ -1,0 +1,5 @@
+IF_DEV_DEF(CPU, "CPU")
+
+// Gpus
+IF_DEV_DEF(CUDA, "CUDA")
+IF_DEV_DEF(HIP, "HIP")

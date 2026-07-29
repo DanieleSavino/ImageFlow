@@ -9,7 +9,7 @@
  */
 #include "ImageFlow/scheduler/reorder.h"
 #include "ImageFlow/error.h"
-#include "ImageFlow/operations.h"
+#include "ImageFlow/operations/operations.h"
 #include "ImageFlow/pipeline.h"
 
 #include <stdlib.h>
@@ -63,34 +63,26 @@ static int _priority(IF_OpType_t t) {
 /**
  * @brief Composite sort key for a pipeline operation.
  *
- * Primary key  : op-type priority (METADATA=0, POINT=1, other=2).
- * Secondary key: preferred device, with polarity flipped by priority parity.
+ * Primary key  : op-type priority (METADATA=0, POINT=1, STENCIL=2,
+ *                REDUCTION=3, MORPH=4).
+ * Secondary key: preferred device, with device ordering reversed on
+ *                odd-priority tiers.
  *
- * The parity flip ensures that at every priority tier boundary the same
- * device is attracted to both sides, minimising host<->device transitions:
+ * The reversal makes the device at the right edge of one tier match the
+ * device at the left edge of the next tier, minimizing transitions at
+ * every boundary — generalizing the 2-device flip trick to N devices by
+ * reversing the whole device ordering instead of a single bit.
  *
- *   even priority (METADATA=0, other=2): GPU=0, CPU=1  (GPU sorts first)
- *   odd  priority (POINT=1):             GPU=1, CPU=0  (CPU sorts first)
- *
- * Concretely, the right edge of an even tier and the left edge of the
- * following odd tier both carry the same device, and vice versa.
- *
- * Example — input: point/cpu, point/gpu, stencil/gpu, stencil/cpu
- *
- *   op           pri  dev  flipped  key
- *   point/cpu     1    1      0      2
- *   point/gpu     1    0      1      3
- *   stencil/gpu   2    0      0      4
- *   stencil/cpu   2    1      1      5
- *
- * Keys are already monotone so the order is unchanged and the
- * point/gpu -> stencil/gpu boundary is transition-free.
+ * Example (2 devices, GPU=0 CPU=1): stencil(pri2,even) sorts GPU,CPU;
+ * morph(pri3,odd) sorts reversed, i.e. CPU,GPU — giving
+ * stencil_gpu, stencil_cpu, morph_cpu, morph_gpu, exactly matching at
+ * the stencil/morph boundary (both CPU).
  */
 static int _sort_key(const IF_Operation_t *op) {
-    int pri         = _priority(op->op_type);
-    int dev         = (op->pref_dev == IF_DEV_GPU) ? 0 : 1;
-    int dev_flipped = (pri % 2 == 0) ? dev : (1 - dev);
-    return pri * 2 + dev_flipped;
+    int pri = _priority(IF_op_type(op->supp_op));
+    int dev = (int)op->pref_dev;
+    int dev_ordered = (pri % 2 == 0) ? dev : (_IF_DEV_LEN - 1 - dev);
+    return pri * _IF_DEV_LEN + dev_ordered;
 }
 
 /**
@@ -135,7 +127,7 @@ IF_error_t IF_reorder(IF_Flow_t flow, IF_ReorderLevel_t aggression) {
     size_t seg_start = 0;
 
     for (size_t i = 0; i <= n; i++) {
-        int hit_barrier = (i == n) || _is_hard_barrier(buf[i].op_type, aggression);
+        int hit_barrier = (i == n) || _is_hard_barrier(IF_op_type(buf[i].supp_op), aggression);
 
         if (hit_barrier) {
             size_t seg_len = i - seg_start;

@@ -21,7 +21,7 @@
 #pragma once
 
 #include "ImageFlow/error.h"
-#include "ImageFlow/operations.h"
+#include "ImageFlow/operations/operations.h"
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -84,7 +84,7 @@ IF_error_t IF_flow_init(IF_Flow_t *flow);
  * @return IF_INVALID_ARGS if the pipeline capacity is invalid.
  * @return IF_OUT_OF_MEMORY if buffer reallocation fails.
  */
-NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args);
+NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_DevType_t pref_dev, IF_OpArgs_t op_args);
 
 /**
  * @brief Returns a pointer to the operation descriptor at index @p i.
