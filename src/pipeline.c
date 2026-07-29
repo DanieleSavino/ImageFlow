@@ -86,29 +86,21 @@ IF_error_t IF_flow_free(IF_Flow_t flow) {
     return IF_SUCCESS;
 }
 
-IF_error_t IF_flow_grayscale(IF_Flow_t flow) {
-    CHECK_FLOW(flow);
-
-    IF_OpArgs_t empty = { .empty = {} };
-    IF_CHECK(IF_flow_push(flow, IF_OP_GRAYSCALE, IF_enabled_gpu(), empty));
-
-    return IF_SUCCESS;
+#define IF_OP_DEF(op, name, type, args)                         \
+IF_error_t IF_flow_##name(IF_Flow_t flow IF_OP_ARGS_##args)     \
+{                                                               \
+    CHECK_FLOW(flow);                                           \
+                                                                \
+    IF_OpArgs_t op_args = IF_OP_INIT_##args;                    \
+                                                                \
+    IF_CHECK(IF_flow_push(flow,                                \
+                          IF_OP_##op,                           \
+                          IF_enabled_gpu(),                     \
+                          op_args));                            \
+                                                                \
+    return IF_SUCCESS;                                          \
 }
 
-IF_error_t IF_flow_invert(IF_Flow_t flow) {
-    CHECK_FLOW(flow);
+#include "ImageFlow/operations/operations.def"
 
-    IF_OpArgs_t empty = { .empty = {} };
-    IF_CHECK(IF_flow_push(flow, IF_OP_INVERT, IF_enabled_gpu(), empty));
-
-    return IF_SUCCESS;
-}
-
-IF_error_t IF_flow_brightness(IF_Flow_t flow, float factor) {
-    CHECK_FLOW(flow);
-
-    IF_OpArgs_t args = { .float_factor = { .factor = factor } };
-    IF_CHECK(IF_flow_push(flow, IF_OP_BRIGHTNESS, IF_enabled_gpu(), args));
-
-    return IF_SUCCESS;
-}
+#undef IF_OP_DEF

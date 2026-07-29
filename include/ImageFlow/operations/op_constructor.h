@@ -1,6 +1,10 @@
 #include "ImageFlow/constructor.h"
 #include "ImageFlow/operations/operations.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
  * @brief Declares an operation implementation function and registers it
@@ -35,3 +39,7 @@ IF_CONSTRUCTOR(IF_register_##dev##_##supp_op) \
 } \
 \
 static IF_error_t IF_##dev##_##supp_op(IF_OpArgs_t args, IF_image_t **imgs)
+
+#ifdef __cplusplus
+}
+#endif

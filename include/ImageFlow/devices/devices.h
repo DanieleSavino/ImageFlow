@@ -46,18 +46,7 @@ static inline int IF_device_enabled(IF_DevType_t dev) {
     return IF_devices_enabled[dev] == IF_STATUS_ON;
 }
 
-static inline IF_DevType_t IF_enabled_gpu() {
-    // FIXME:
-    // for(IF_DevType_t dev = IF_DEV_CUDA; dev <= IF_DEV_HIP; dev++) {
-    //     if(IF_device_enabled(dev))
-    //         return dev;
-    // }
-
-    return IF_DEV_CUDA;
-
-    // CPU Fallback
-    return IF_DEV_CPU;
-}
+IF_DevType_t IF_enabled_gpu();
 
 #ifdef __cplusplus
 }

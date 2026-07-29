@@ -5,3 +5,13 @@ IF_DevStatus_t IF_devices_enabled[_IF_DEV_LEN];
 IF_load_img_func_ptr_t    IF_LoadImgFuncs[_IF_DEV_LEN];
 IF_retrieve_img_func_ptr_t IF_RetrieveImgFuncs[_IF_DEV_LEN];
 IF_free_img_func_ptr_t IF_FreeImgFuncs[_IF_DEV_LEN];
+
+IF_DevType_t IF_enabled_gpu() {
+    for(IF_DevType_t dev = IF_DEV_CUDA; dev <= IF_DEV_HIP; dev++) {
+        if(IF_device_enabled(dev))
+            return dev;
+    }
+
+    // CPU Fallback
+    return IF_DEV_CPU;
+}

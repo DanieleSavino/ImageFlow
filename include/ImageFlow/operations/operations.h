@@ -30,6 +30,7 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include "ImageFlow/devices/devices.h"
+#include "ImageFlow/operations/op_args.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,18 +50,6 @@ typedef enum {
     IF_TRAVERSAL_MORPH     /**< Geometric transformation (e.g. rotate, horizontal resize). */
 } IF_OpType_t;
 
-/**
- * @brief Tagged union of operation-specific arguments.
- *
- * Extend this union when adding new operations that require parameters.
- *
- * @warning Adding pointer members here would complicate any future
- *          distributed (MPI) execution model significantly.
- */
-typedef union {
-    struct { char _unused; } empty;        /**< Placeholder for zero-argument operations. */
-    struct { float factor; } float_factor; /**< Single float parameter (e.g. brightness factor). */
-} IF_OpArgs_t;
 
 /**
  * @brief Identifies a supported image operation.
@@ -68,7 +57,7 @@ typedef union {
  * _IF_OP_LEN is a sentinel used to size the dispatch table; do not use it
  * as a valid operation identifier.
  */
-#define IF_OP_DEF(op, name, type) IF_OP_##op,
+#define IF_OP_DEF(op, name, type, args) IF_OP_##op,
 
 typedef enum {
     #include "operations.def"
@@ -79,7 +68,7 @@ typedef enum {
 
 
 /* String names, built from the same list */
-#define IF_OP_DEF(op, name, type) name,
+#define IF_OP_DEF(op, name, type, args) #name,
 
 static const char *IF_OpNames[_IF_OP_LEN] = {
     #include "operations.def"
@@ -92,7 +81,7 @@ static inline const char* IF_strop(IF_SupportedOp_t op) {
 }
 
 
-#define IF_OP_DEF(op, name, type) IF_TRAVERSAL_##type,
+#define IF_OP_DEF(op, name, type, args) IF_TRAVERSAL_##type,
 
 static const IF_OpType_t IF_OpTypes[_IF_OP_LEN] = {
     #include "operations.def"
