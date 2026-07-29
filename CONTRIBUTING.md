@@ -1,6 +1,6 @@
 # Contributing to ImageFlow
 
-This is a toy project, but PRs are welcome. The dispatch layer for both devices and operations is table-driven, so adding either usually means adding a `.def` entry plus one self-registering implementation file — no changes to the scheduler, pipeline, or dispatch code required.
+The dispatch layer for both devices and operations is table-driven, so adding either usually means adding a `.def` entry plus one self-registering implementation file — no changes to the scheduler, pipeline, or dispatch code required.
 
 ## Adding a device
 

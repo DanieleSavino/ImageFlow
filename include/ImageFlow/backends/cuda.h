@@ -10,8 +10,69 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 
-#define IF_CUDA_CHECK(call) call
-#define IF_CUDA_KERNEL_CHECK() ;
+/**
+ * @brief Checks a CUDA API call and returns IF_CUDA_ERROR on failure.
+ *
+ * Prints the CUDA error string, file, and line to stderr before returning.
+ * Intended for use around any cudaXxx() API call inside a function returning
+ * IF_error_t.
+ *
+ * @param call A CUDA runtime API call expression returning cudaError_t.
+ */
+#define IF_CUDA_CHECK(call)                                                    \
+    do {                                                                       \
+        cudaError_t __err__ = call;                                            \
+        if (__err__ != cudaSuccess) {                                          \
+            fprintf(stderr,                                                    \
+                    "CUDA Error: %s in file %s at line %d\n",                  \
+                    cudaGetErrorString(__err__),                                \
+                    __FILE__,                                                  \
+                    __LINE__);                                                  \
+            return IF_CUDA_ERROR;                                              \
+        }                                                                      \
+    } while (0)
+
+/**
+ * @brief Checks the last CUDA kernel launch for errors, returning IF_KERNEL_FAILURE on failure.
+ *
+ * In DEBUG builds: calls cudaGetLastError() followed by cudaDeviceSynchronize(),
+ * catching both launch configuration errors and runtime execution errors.
+ * In release builds: calls cudaGetLastError() only; execution errors are
+ * caught by the explicit cudaDeviceSynchronize() that follows each kernel launch.
+ *
+ * @note Must be called immediately after a kernel launch (<<<...>>>) before
+ *       any other CUDA call that could clear the error state.
+ */
+#ifdef DEBUG
+    #define IF_CUDA_KERNEL_CHECK()                                             \
+        do {                                                                   \
+            cudaError_t __err = cudaGetLastError();                            \
+            if (__err != cudaSuccess) {                                        \
+                fprintf(stderr, "CUDA Launch Error [%s]: %s\nFile: %s | Line: %d\n", \
+                        cudaGetErrorName(__err), cudaGetErrorString(__err),    \
+                        __FILE__, __LINE__);                                   \
+                return IF_KERNEL_FAILURE;                                      \
+            }                                                                  \
+            __err = cudaDeviceSynchronize();                                   \
+            if (__err != cudaSuccess) {                                        \
+                fprintf(stderr, "CUDA Execution Error [%s]: %s\nFile: %s | Line: %d\n", \
+                        cudaGetErrorName(__err), cudaGetErrorString(__err),    \
+                        __FILE__, __LINE__);                                   \
+                return IF_KERNEL_FAILURE;                                      \
+            }                                                                  \
+        } while (0)
+#else
+    #define IF_CUDA_KERNEL_CHECK()                                             \
+        do {                                                                   \
+            cudaError_t __err = cudaGetLastError();                            \
+            if (__err != cudaSuccess) {                                        \
+                fprintf(stderr, "CUDA Launch Error [%s]: %s\nFile: %s | Line: %d\n", \
+                        cudaGetErrorName(__err), cudaGetErrorString(__err),    \
+                        __FILE__, __LINE__);                                   \
+                return IF_KERNEL_FAILURE;                                      \
+            }                                                                  \
+        } while (0)
+#endif
 
 static IF_error_t IFCU_getDevices(int *cuda_dev) {
     cudaError_t err = cudaGetDeviceCount(cuda_dev);
