@@ -63,13 +63,13 @@ file(GLOB_RECURSE SRC_C "${PROJECT_SOURCE_DIR}/src/*.c")
 
 set(SRC_CUDA "")
 if(HAVE_CUDA)
-    file(GLOB_RECURSE SRC_CUDA "${PROJECT_SOURCE_DIR}/src/accelerated/cuda/*.cu")
+    file(GLOB_RECURSE SRC_CUDA "${PROJECT_SOURCE_DIR}/src/backends/*.cu")
     set_source_files_properties(${SRC_CUDA} PROPERTIES LANGUAGE CUDA)
 endif()
 
 set(SRC_HIP "")
 if(HAVE_HIP)
-    file(GLOB_RECURSE SRC_HIP "${PROJECT_SOURCE_DIR}/src/accelerated/hip/*.cpp")
+    file(GLOB_RECURSE SRC_HIP "${PROJECT_SOURCE_DIR}/src/backends/*.cpp")
     set_source_files_properties(${SRC_HIP} PROPERTIES LANGUAGE HIP)
 endif()
 
