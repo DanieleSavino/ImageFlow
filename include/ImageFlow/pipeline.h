@@ -21,7 +21,7 @@
 #pragma once
 
 #include "ImageFlow/error.h"
-#include "ImageFlow/operations.h"
+#include "ImageFlow/operations/operations.h"
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -84,7 +84,7 @@ IF_error_t IF_flow_init(IF_Flow_t *flow);
  * @return IF_INVALID_ARGS if the pipeline capacity is invalid.
  * @return IF_OUT_OF_MEMORY if buffer reallocation fails.
  */
-NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_OpType_t op_type, IF_DevType_t pref_dev, IF_OpArgs_t op_args);
+NODISCARD IF_error_t IF_flow_push(IF_Flow_t flow, IF_SupportedOp_t supp_op, IF_DevType_t pref_dev, IF_OpArgs_t op_args);
 
 /**
  * @brief Returns a pointer to the operation descriptor at index @p i.
@@ -110,34 +110,20 @@ NODISCARD IF_error_t IF_flow_get(IF_Flow_t flow, size_t i, IF_Operation_t **oper
  */
 IF_error_t IF_flow_free(IF_Flow_t flow);
 
-/**
- * @brief Appends a grayscale operation to the pipeline (GPU, IF_TRAVERSAL_POINT).
- *
- * @param flow Target pipeline.
- * @return IF_SUCCESS on success.
- * @return IF_NULL_POINTER, IF_INVALID_ARGS, or IF_OUT_OF_MEMORY on failure.
- */
-IF_error_t IF_flow_grayscale(IF_Flow_t flow);
+#define CHECK_FLOW(flow) \
+    do { \
+        if(flow == NULL || flow->buff == NULL)  \
+            return IF_NULL_POINTER; \
+        if(flow->_size <= 0) \
+            return  IF_INVALID_ARGS; \
+    } while(0)
 
-/**
- * @brief Appends an invert operation to the pipeline (GPU, IF_TRAVERSAL_POINT).
- *
- * @param flow Target pipeline.
- * @return IF_SUCCESS on success.
- * @return IF_NULL_POINTER, IF_INVALID_ARGS, or IF_OUT_OF_MEMORY on failure.
- */
-IF_error_t IF_flow_invert(IF_Flow_t flow);
+#define IF_OP_DEF(op, name, type, args) \
+    IF_error_t IF_flow_##name(IF_Flow_t flow IF_OP_ARGS_##args);
 
-/**
- * @brief Appends a brightness operation to the pipeline (GPU, IF_TRAVERSAL_POINT).
- *
- * @param flow   Target pipeline.
- * @param factor Multiplicative brightness factor. Output is clamped to [0.0, 1.0]
- *               at execution time. Must be finite.
- * @return IF_SUCCESS on success.
- * @return IF_NULL_POINTER, IF_INVALID_ARGS, or IF_OUT_OF_MEMORY on failure.
- */
-IF_error_t IF_flow_brightness(IF_Flow_t flow, float factor);
+#include "ImageFlow/operations/operations.def"
+
+#undef IF_OP_DEF
 
 #ifdef __cplusplus
 }
