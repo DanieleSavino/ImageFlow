@@ -15,6 +15,7 @@ typedef enum {
 
 #define IF_DEV_DEF(dev) #dev,
 
+// FIXME: Move to impl.
 static const char *IF_DevNames[_IF_DEV_LEN] = {
     #include "devices.def"
 };

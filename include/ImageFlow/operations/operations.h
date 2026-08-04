@@ -70,6 +70,7 @@ typedef enum {
 /* String names, built from the same list */
 #define IF_OP_DEF(op, name, type, args) #name,
 
+// FIXME: Move to impl.
 static const char *IF_OpNames[_IF_OP_LEN] = {
     #include "operations.def"
 };
@@ -83,6 +84,7 @@ static inline const char* IF_strop(IF_SupportedOp_t op) {
 
 #define IF_OP_DEF(op, name, type, args) IF_TRAVERSAL_##type,
 
+// FIXME: Move to impl.
 static const IF_OpType_t IF_OpTypes[_IF_OP_LEN] = {
     #include "operations.def"
 };

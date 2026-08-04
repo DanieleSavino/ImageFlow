@@ -35,14 +35,14 @@ int main(void)
 
     TIME_BLOCK(
         "GPU",
-        IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_LINEAR, &img_out));
+        IF_CHECK(IF_flow_run(flow, &img, &img_out));
     );
 
     IF_CHECK(IF_storeImage(&img_out, "out_gpu.jpg"));
 
     TIME_BLOCK(
         "REORDER",
-        IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_REORDER_O3, &img_out));
+        IF_CHECK(IF_flow_run_sched(flow, &img, IF_SCHEDULER_REORDER, &img_out));
     );
 
     IF_CHECK(IF_storeImage(&img_out, "out_reord.jpg"));

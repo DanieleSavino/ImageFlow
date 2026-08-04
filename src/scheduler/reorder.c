@@ -11,6 +11,9 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/operations/operations.h"
 #include "ImageFlow/pipeline.h"
+#include "ImageFlow/scheduler/linear.h"
+#include "ImageFlow/scheduler/scheduler.h"
+#include "ImageFlow/vars.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -137,6 +140,32 @@ IF_error_t IF_reorder(IF_Flow_t flow, IF_ReorderLevel_t aggression) {
             seg_start = i + 1;
         }
     }
+
+    return IF_SUCCESS;
+}
+
+#define _DEFAULT_AGGRESSION IF_REORDER_SAFE
+
+IF_ReorderLevel_t IF_getenv_aggression() {
+    const char *env_sched = getenv(IF_AGGRESSION_PARAM);
+
+    if(env_sched == NULL) return _DEFAULT_AGGRESSION;
+
+    if(!strcmp(env_sched, "O0") || !strcmp(env_sched, "SAFE"))
+        return IF_REORDER_SAFE;
+    if(!strcmp(env_sched, "O1") || !strcmp(env_sched, "STENCIL"))
+        return IF_REORDER_STENCIL;
+    if(!strcmp(env_sched, "O2") || !strcmp(env_sched, "REDUCTION"))
+        return IF_REORDER_REDUCTION;
+    if(!strcmp(env_sched, "O3") || !strcmp(env_sched, "MORPH"))
+        return IF_REORDER_MORPH;
+
+    return _DEFAULT_AGGRESSION;
+}
+
+NODISCARD IF_error_t IF_reorder_execute(IF_Flow_t flow, const IF_image_t *img_in, IF_image_t *img_out) {
+    IF_CHECK(IF_reorder(flow, IF_getenv_aggression()));
+    IF_CHECK(IF_flow_run_sched(flow, img_in, IF_SCHEDULER_LINEAR, img_out));
 
     return IF_SUCCESS;
 }
