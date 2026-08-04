@@ -17,7 +17,6 @@
  */
 #pragma once
 
-#include "ImageFlow/constructor.h"
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include "ImageFlow/devices/devices.h"

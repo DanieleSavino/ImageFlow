@@ -7,14 +7,14 @@ The dispatch layer for both devices and operations is table-driven, so adding ei
 1. **Register it in `include/ImageFlow/devices/devices.def`**:
 
    ```c
-   IF_DEV_DEF(CPU, "CPU")
+   IF_DEV_DEF(CPU)
 
    // Gpus
-   IF_DEV_DEF(CUDA, "CUDA")
-   IF_DEV_DEF(HIP, "HIP")
+   IF_DEV_DEF(CUDA)
+   IF_DEV_DEF(HIP)
    ```
 
-   Add a new `IF_DEV_DEF(YOUR_DEV, "YourDev")` line. This drives the `IF_DevType_t` enum, `IF_strdev`, and the size of every per-device dispatch table — nothing else needs to know the device exists.
+   Add a new `IF_DEV_DEF(YOUR_DEV)` line. This drives the `IF_DevType_t` enum, `IF_strdev`, and the size of every per-device dispatch table — nothing else needs to know the device exists.
 
 2. **Implement the backend.** Create `include/ImageFlow/backends/your_dev.h` (+ a matching `src/backends/your_dev.{c,cpp,cu}` that just `#include`s it, following the existing backends) and provide:
 

@@ -3,7 +3,7 @@
 extern "C" {
 #endif
 
-#define IF_DEV_DEF(dev, name) IF_DEV_##dev,
+#define IF_DEV_DEF(dev) IF_DEV_##dev,
 
 typedef enum {
     #include "devices.def"
@@ -13,7 +13,7 @@ typedef enum {
 #undef IF_DEV_DEF
 
 
-#define IF_DEV_DEF(dev, name) name,
+#define IF_DEV_DEF(dev) #dev,
 
 static const char *IF_DevNames[_IF_DEV_LEN] = {
     #include "devices.def"
