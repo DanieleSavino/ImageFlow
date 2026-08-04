@@ -74,14 +74,7 @@ typedef enum {
 
 #undef IF_SCHED_DEF
 
-#define IF_SCHED_DEF(name) #name,
-
-// FIXME: Move to impl.
-static const char* IF_SchedNames[_IF_SCHEDULER_LEN] = {
-    #include "schedulers.def"
-};
-
-#undef IF_SCHED_DEF
+extern const char* IF_SchedNames[_IF_SCHEDULER_LEN];
 
 static inline const char* IF_strsched(IF_Scheduler_t op) {
     return IF_SchedNames[op];

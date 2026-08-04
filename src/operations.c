@@ -12,3 +12,20 @@ NODISCARD IF_error_t IF_op_execute(IF_Operation_t *op, IF_image_t **imgs) {
 
     return op_impl->func(op->op_args, imgs);
 }
+
+/* String names, built from the same list */
+#define IF_OP_DEF(op, name, type, args) #name,
+
+const char *IF_OpNames[_IF_OP_LEN] = {
+    #include "ImageFlow/operations/operations.def"
+};
+
+#undef IF_OP_DEF
+
+#define IF_OP_DEF(op, name, type, args) IF_TRAVERSAL_##type,
+
+const IF_OpType_t IF_OpTypes[_IF_OP_LEN] = {
+    #include "ImageFlow/operations/operations.def"
+};
+
+#undef IF_OP_DEF

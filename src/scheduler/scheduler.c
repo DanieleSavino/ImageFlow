@@ -16,6 +16,14 @@ NODISCARD IF_error_t IF_flow_run_sched(IF_Flow_t flow, const IF_image_t *img_in,
     return IF_sched_impls[sched](flow, img_in, img_out);
 }
 
+#define IF_SCHED_DEF(name) #name,
+
+const char* IF_SchedNames[_IF_SCHEDULER_LEN] = {
+    #include "ImageFlow/scheduler/schedulers.def"
+};
+
+#undef IF_SCHED_DEF
+
 #define _DEFAULT_SCHED IF_SCHEDULER_REORDER
 
 IF_Scheduler_t IF_getenv_sched() {
