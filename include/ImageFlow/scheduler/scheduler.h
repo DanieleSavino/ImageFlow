@@ -52,16 +52,54 @@ extern "C" {
     } while(0)
 
 /**
+ * @brief X-macro helper: expands an entry from schedulers.def into an
+ *        IF_Scheduler_t enumerator. Undefined immediately after use so it
+ *        doesn't leak into files that include scheduler.h.
+ */
+#define IF_SCHED_DEF(name) IF_SCHEDULER_##name,
+
+/**
  * @brief Identifies the scheduling strategy used to execute a pipeline.
+ *
+ * Generated from scheduler/schedulers.def — add a scheduler by adding a
+ * line there plus a matching IF_SCHED_IMPL(name) implementation, rather
+ * than editing this enum directly.
  */
 typedef enum {
-    IF_SCHEDULER_CPU,   /**< CPU-only */
-    IF_SCHEDULER_LINEAR, /**< Naive sequential scheduler */
-    IF_SCHEDULER_REORDER_O0,
-    IF_SCHEDULER_REORDER_O1,
-    IF_SCHEDULER_REORDER_O2,
-    IF_SCHEDULER_REORDER_O3
+    #include "schedulers.def"
+    _IF_SCHEDULER_LEN /**< Sentinel: count of registered schedulers, also
+                            the size of IF_sched_impls[]. Not a valid
+                            scheduler value. */
 } IF_Scheduler_t;
+
+#undef IF_SCHED_DEF
+
+extern const char* IF_SchedNames[_IF_SCHEDULER_LEN];
+
+static inline const char* IF_strsched(IF_Scheduler_t op) {
+    return IF_SchedNames[op];
+}
+
+/**
+ * @brief Function pointer type for a scheduler's execute implementation.
+ *
+ * Matches IF_flow_run / IF_flow_run_sched's per-scheduler entry points
+ * (e.g. IF_cpu_execute, IF_linear_execute, IF_reorder_execute).
+ */
+typedef IF_error_t (*IF_SchedImpl_t)(IF_Flow_t flow, const IF_image_t *img_in, IF_image_t *img_out);
+
+/**
+ * @brief Dispatch table mapping IF_Scheduler_t values to their registered
+ *        implementation.
+ *
+ * Populated at load time — one IF_CONSTRUCTOR per scheduler, installed via
+ * IF_SCHED_IMPL in that scheduler's own header. Defined in scheduler.c.
+ *
+ * @warning Indexing with a value >= _IF_SCHEDULER_LEN is undefined;
+ *          IF_flow_run_sched bounds-checks before indexing, but any other
+ *          direct access to this table must do the same.
+ */
+extern IF_SchedImpl_t IF_sched_impls[_IF_SCHEDULER_LEN];
 
 /**
  * @brief Executes a pipeline against an input image using the specified scheduler.

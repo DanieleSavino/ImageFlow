@@ -6,6 +6,15 @@ IF_load_img_func_ptr_t    IF_LoadImgFuncs[_IF_DEV_LEN];
 IF_retrieve_img_func_ptr_t IF_RetrieveImgFuncs[_IF_DEV_LEN];
 IF_free_img_func_ptr_t IF_FreeImgFuncs[_IF_DEV_LEN];
 
+
+#define IF_DEV_DEF(dev) #dev,
+
+const char *IF_DevNames[_IF_DEV_LEN] = {
+    #include "ImageFlow/devices/devices.h"
+};
+
+#undef IF_DEV_DEF
+
 IF_DevType_t IF_enabled_gpu() {
     for(IF_DevType_t dev = IF_DEV_CUDA; dev <= IF_DEV_HIP; dev++) {
         if(IF_device_enabled(dev))

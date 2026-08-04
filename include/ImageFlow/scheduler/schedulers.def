@@ -1,0 +1,16 @@
+/**
+ * @file schedulers.def
+ * @brief X-macro list of registered schedulers.
+ *
+ * Included by scheduler.h under IF_SCHED_DEF(name) -> IF_SCHEDULER_##name,
+ * to generate the IF_Scheduler_t enum. Order determines enum values but
+ * carries no other semantic meaning.
+ *
+ * Adding a line here is only half of adding a scheduler: a matching
+ * IF_SCHED_IMPL(name) { ... } must exist somewhere (conventionally in
+ * that scheduler's own header, e.g. scheduler/your_sched.h) to actually
+ * populate IF_sched_impls[IF_SCHEDULER_name]. See CONTRIBUTING.md.
+ */
+IF_SCHED_DEF(CPU)      /**< CPU-only execution via OpenMP; skips GPU dispatch entirely. */
+IF_SCHED_DEF(LINEAR)   /**< Naive sequential scheduler; reference implementation. */
+IF_SCHED_DEF(REORDER)  /**< Reorders the pipeline (currently at IF_REORDER_SAFE), then runs linearly. */

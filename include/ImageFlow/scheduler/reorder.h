@@ -81,7 +81,9 @@
 #pragma once
 
 #include "ImageFlow/error.h"
+#include "ImageFlow/io/image.h"
 #include "ImageFlow/pipeline.h"
+#include "ImageFlow/scheduler/sched_constructor.h"
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -98,7 +100,8 @@ typedef enum {
     IF_REORDER_SAFE      = 0, /**< Reorder METADATA/POINT only. No risk. */
     IF_REORDER_STENCIL   = 1, /**< POINT may cross STENCIL barriers.    */
     IF_REORDER_REDUCTION = 2, /**< POINT may cross REDUCTION barriers.  */
-    IF_REORDER_MORPH     = 3  /**< POINT may cross MORPH barriers.      */
+    IF_REORDER_MORPH     = 3, /**< POINT may cross MORPH barriers.      */
+    _IF_REORDER_LEN
 } IF_ReorderLevel_t;
 
 /**
@@ -114,6 +117,29 @@ typedef enum {
  * @return IF_INVALID_ARGS if aggression is out of range.
  */
 NODISCARD IF_error_t IF_reorder(IF_Flow_t flow, IF_ReorderLevel_t aggression);
+
+/**
+ * @brief Reorders @p flow at IF_REORDER_SAFE aggression, then executes it
+ *        via IF_SCHEDULER_LINEAR.
+ *
+ * This is the implementation registered as IF_SCHEDULER_REORDER.
+ *
+ * @param flow    Pipeline to reorder and execute. Modified in place by
+ *                the reorder step.
+ * @param img_in  Source image. Must not be NULL. Not modified.
+ * @param img_out Output image. Must not be NULL. Receives the result.
+ * @return IF_SUCCESS on success.
+ * @return Any error code propagated from IF_reorder or IF_flow_run_sched.
+ */
+NODISCARD IF_error_t IF_reorder_execute(IF_Flow_t flow, const IF_image_t *img_in, IF_image_t *img_out);
+
+/**
+ * @brief Self-registers IF_reorder_execute as the IF_SCHEDULER_REORDER
+ *        implementation in IF_sched_impls[].
+ */
+IF_SCHED_IMPL(REORDER) {
+    return IF_reorder_execute(flow, img_in, img_out);
+}
 
 #ifdef __cplusplus
 }
