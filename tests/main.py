@@ -4,4 +4,4 @@ import IF_tests as IF
 
 fastest.default_runner.set_backend(IF)
 
-fastest.run_log(fastest.tests.cpu_round_trip)
+fastest.run_log_all()

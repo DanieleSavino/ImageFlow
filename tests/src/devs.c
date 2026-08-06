@@ -1,18 +1,23 @@
 #include "ImageFlow/devices/devices.h"
 #include "ImageFlow/devices/img_loader.h"
+#include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include "fastest/custom_tests.h"
 #include "fastest/tests.h"
 #include "IF_tests/error.h"
+#include "IF_tests/utils.h"
+#include <stdio.h>
 #include <string.h>
 
-#define TESTS_DIM_X 10
-#define TESTS_DIM_Y 10
+#define TESTS_DIM_X 1920
+#define TESTS_DIM_Y 1080
 #define TESTS_CHANNELS 3
 
-int seed = 0;
+static int seed = 0;
 
 static void round_trip(IF_DevType_t dev, FASTEST_TestOutput_t *out) {
+    PROBE_DEV(out, dev);
+
     IF_image_t img;
     IF_image_t img_out;
     IF_image_t *imgs[_IF_DEV_LEN] = {0};
@@ -34,10 +39,46 @@ static void round_trip(IF_DevType_t dev, FASTEST_TestOutput_t *out) {
 
     IF_FASTEST_CHECK(IF_freeImage(&img));
     IF_FASTEST_CHECK(IF_freeImage(&img_out));
+    IF_FASTEST_CHECK(IF_img_free(dev, imgs));
 }
 
-FASTEST_CUSTOMTEST_INLINE("cpu_round_trip", FASTEST_TIME_NS | FASTEST_FAIL_ERROR, NULL,
-    {
-        round_trip(IF_DEV_CPU, out);
-    }
+static void double_free(IF_DevType_t dev, FASTEST_TestOutput_t *out) {
+    PROBE_DEV(out, dev);
+
+    IF_image_t img;
+    IF_image_t *imgs[_IF_DEV_LEN] = {0};
+
+    IF_FASTEST_CHECK(IF_genRandomImage(&img, TESTS_DIM_X, TESTS_DIM_Y, TESTS_CHANNELS, seed++));
+
+    imgs[IF_DEV_CPU] = &img;
+
+    IF_FASTEST_CHECK(IF_host2dev(dev, imgs));
+
+    IF_error_t err[2];
+
+    err[0] = IF_img_free(dev, imgs);
+    err[1] = IF_img_free(dev, imgs);
+
+    out->test_flags |= FASTEST_ASSERT_EQ;
+    out->exit_status |= (err[0] == IF_SUCCESS && (err[1] == IF_NULL_POINTER || dev == IF_DEV_CPU)) ? FASTEST_SUCCESS : FASTEST_ERROR_ASSERT;
+
+    IF_FASTEST_CHECK(IF_freeImage(&img));
+}
+
+#define IF_DEV_DEF(name) \
+\
+FASTEST_CUSTOMTEST_INLINE("devs/" #name "/round_trip", FASTEST_TIME_NS | FASTEST_FAIL_ERROR, NULL, \
+    { \
+        round_trip(IF_DEV_##name, out); \
+    } \
+) \
+\
+FASTEST_CUSTOMTEST_INLINE("devs/" #name "/double_free", FASTEST_TIME_NS | FASTEST_FAIL_ERROR, NULL, \
+    { \
+        double_free(IF_DEV_##name, out); \
+    } \
 )
+
+#include "ImageFlow/devices/devices.def"
+
+#undef IF_DEV_DEF
