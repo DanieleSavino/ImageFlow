@@ -15,7 +15,6 @@ endif()
 string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-option(BUILD_DEMO  "Build the imgflow demo executable" ON)
 option(BUILD_TESTS "Build the ImageFlow test suite"    ON)
 
 # ==============================================================================
