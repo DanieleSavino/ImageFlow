@@ -20,6 +20,7 @@
 #include "ImageFlow/error.h"
 #include "ImageFlow/io/image.h"
 #include "ImageFlow/devices/devices.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __cplusplus
@@ -61,8 +62,10 @@ static IF_load_img_func_ptr_t IF_get_load_img(IF_DevType_t dev) {
 
 static inline IF_error_t IF_host2dev(IF_DevType_t dev, IF_image_t **imgs) {
     IF_load_img_func_ptr_t func = IF_get_load_img(dev);
-    if(func == NULL)
+    if(func == NULL) {
+        printf("FUNC: %p\n", func);
         return IF_INVALID_ARGS;
+    }
 
     func(imgs);
     return IF_SUCCESS;
