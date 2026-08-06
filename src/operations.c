@@ -14,7 +14,7 @@ NODISCARD IF_error_t IF_op_execute(IF_Operation_t *op, IF_image_t **imgs) {
 }
 
 /* String names, built from the same list */
-#define IF_OP_DEF(op, name, type, args) #name,
+#define IF_OP_DEF(op, name, type, args, def) #name,
 
 const char *IF_OpNames[_IF_OP_LEN] = {
     #include "ImageFlow/operations/operations.def"
@@ -22,7 +22,7 @@ const char *IF_OpNames[_IF_OP_LEN] = {
 
 #undef IF_OP_DEF
 
-#define IF_OP_DEF(op, name, type, args) IF_TRAVERSAL_##type,
+#define IF_OP_DEF(op, name, type, args, def) IF_TRAVERSAL_##type,
 
 const IF_OpType_t IF_OpTypes[_IF_OP_LEN] = {
     #include "ImageFlow/operations/operations.def"

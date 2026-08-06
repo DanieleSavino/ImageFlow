@@ -86,7 +86,7 @@ IF_error_t IF_flow_free(IF_Flow_t flow) {
     return IF_SUCCESS;
 }
 
-#define IF_OP_DEF(op, name, type, args)                         \
+#define IF_OP_DEF(op, name, type, args, def)                         \
 IF_error_t IF_flow_##name(IF_Flow_t flow IF_OP_ARGS_##args)     \
 {                                                               \
     CHECK_FLOW(flow);                                           \

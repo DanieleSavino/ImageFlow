@@ -1,3 +1,16 @@
-IF_OP_DEF(GRAYSCALE, Grayscale, POINT, EMPTY)
-IF_OP_DEF(INVERT,    Invert,    POINT, EMPTY)
-IF_OP_DEF(BRIGHTNESS,Brightness,POINT, FLOAT_FACTOR)
+/*
+ * Operation definition table
+ *
+ * Format:
+ * IF_OP_DEF(
+ *     operation,      // internal operation identifier
+ *     api_name,       // public API function name
+ *     op_type,        // operation category/type
+ *     input_type,     // input element type
+ *     default_param   // default parameter used for testing
+ * )
+ */
+
+IF_OP_DEF(GRAYSCALE,  Grayscale,  POINT, EMPTY,        )
+IF_OP_DEF(INVERT,     Invert,     POINT, EMPTY,        )
+IF_OP_DEF(BRIGHTNESS, Brightness, POINT, FLOAT_FACTOR, float factor = 1.5f)

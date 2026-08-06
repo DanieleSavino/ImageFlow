@@ -10,7 +10,7 @@ IF_free_img_func_ptr_t IF_FreeImgFuncs[_IF_DEV_LEN];
 #define IF_DEV_DEF(dev) #dev,
 
 const char *IF_DevNames[_IF_DEV_LEN] = {
-    #include "ImageFlow/devices/devices.h"
+    #include "ImageFlow/devices/devices.def"
 };
 
 #undef IF_DEV_DEF

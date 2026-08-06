@@ -1,5 +1,17 @@
+/*
+ * devices.def
+ *
+ * Fields:
+ *  1. Device identifier
+ *
+ * Supported device backends:
+ *  - CPU: host execution
+ *  - CUDA: NVIDIA GPU execution
+ *  - HIP: AMD GPU execution
+ */
+
 IF_DEV_DEF(CPU)
 
-// Gpus
+// GPU backends
 IF_DEV_DEF(CUDA)
 IF_DEV_DEF(HIP)

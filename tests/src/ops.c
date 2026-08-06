@@ -6,16 +6,15 @@
 #include "ImageFlow/operations/operations.h"
 #include "fastest/tests.h"
 #include "fastest/custom_tests.h"
-#include <stdlib.h>
 
 static int seed = 0;
 
-#define TESTS_DIM_X 5
-#define TESTS_DIM_Y 5
+#define TESTS_DIM_X 1920
+#define TESTS_DIM_Y 1080
 #define TESTS_CHANNELS 3
 
 static void check_against_cpu(IF_DevType_t dev, IF_SupportedOp_t op, IF_OpArgs_t args, FASTEST_TestOutput_t *out) {
-    PROBE_DEV(out, dev);
+    PROBE_DEV_LOG(dev);
 
     IF_OpImpl_t *dev_impl = IF_op_get_impl(op, dev);
     IF_OpImpl_t *host_impl = IF_op_get_impl(op, IF_DEV_CPU);
@@ -51,7 +50,7 @@ static void check_against_cpu(IF_DevType_t dev, IF_SupportedOp_t op, IF_OpArgs_t
     IF_FASTEST_CHECK(IF_freeImage(&dev_img));
 }
 
-#define IF_OP_DEF(op, name, type, args_type) \
+#define IF_OP_DEF(op, name, type, args_type, def) \
 \
 FASTEST_CUSTOMTEST_INLINE("ops/" #name "/check_against_cpu", FASTEST_TIME_NS | FASTEST_FAIL_ERROR, NULL, \
     { \

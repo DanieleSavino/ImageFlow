@@ -107,7 +107,7 @@ static inline IF_free_img_func_ptr_t IF_get_free_img(IF_DevType_t dev) {
  */
 static inline IF_error_t IF_img_free(IF_DevType_t dev, IF_image_t **imgs) {
     if (imgs[dev] == NULL)
-        return IF_SUCCESS;
+        return IF_NULL_POINTER;
 
     IF_free_img_func_ptr_t free_fn = IF_get_free_img(dev);
     if (free_fn == NULL)

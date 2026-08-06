@@ -6,23 +6,26 @@
 #include "fastest/tests.h"
 #include "IF_tests/error.h"
 #include "IF_tests/utils.h"
-#include <stdio.h>
+#include "IF_tests/vars.h"
 #include <string.h>
-
-#define TESTS_DIM_X 1920
-#define TESTS_DIM_Y 1080
-#define TESTS_CHANNELS 3
 
 static int seed = 0;
 
 static void round_trip(IF_DevType_t dev, FASTEST_TestOutput_t *out) {
     PROBE_DEV(out, dev);
 
+    int DIM_X;
+    IF_GET_TEST_VAR(IF_TESTS_DIM_X, &DIM_X);
+    int DIM_Y;
+    IF_GET_TEST_VAR(IF_TESTS_DIM_Y, &DIM_Y);
+    int CHANNELS;
+    IF_GET_TEST_VAR(IF_TESTS_CHANNELS, &CHANNELS);
+
     IF_image_t img;
     IF_image_t img_out;
     IF_image_t *imgs[_IF_DEV_LEN] = {0};
 
-    IF_FASTEST_CHECK(IF_genRandomImage(&img, TESTS_DIM_X, TESTS_DIM_Y, TESTS_CHANNELS, seed++));
+    IF_FASTEST_CHECK(IF_genRandomImage(&img, DIM_X, DIM_Y, CHANNELS, seed++));
 
     imgs[IF_DEV_CPU] = &img;
 
@@ -45,10 +48,17 @@ static void round_trip(IF_DevType_t dev, FASTEST_TestOutput_t *out) {
 static void double_free(IF_DevType_t dev, FASTEST_TestOutput_t *out) {
     PROBE_DEV(out, dev);
 
+    int DIM_X;
+    IF_GET_TEST_VAR(IF_TESTS_DIM_X, &DIM_X);
+    int DIM_Y;
+    IF_GET_TEST_VAR(IF_TESTS_DIM_Y, &DIM_Y);
+    int CHANNELS;
+    IF_GET_TEST_VAR(IF_TESTS_CHANNELS, &CHANNELS);
+
     IF_image_t img;
     IF_image_t *imgs[_IF_DEV_LEN] = {0};
 
-    IF_FASTEST_CHECK(IF_genRandomImage(&img, TESTS_DIM_X, TESTS_DIM_Y, TESTS_CHANNELS, seed++));
+    IF_FASTEST_CHECK(IF_genRandomImage(&img, DIM_X, DIM_Y, CHANNELS, seed++));
 
     imgs[IF_DEV_CPU] = &img;
 

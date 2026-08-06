@@ -180,8 +180,6 @@ IF_RETRIEVE_IMG_IMPL(HIP) {
 
 IF_FREE_IMG_IMPL(HIP) {
     IF_image_t *hip_img = imgs[IF_DEV_HIP];
-    if(hip_img == NULL)
-        return IF_NULL_POINTER;
 
     IF_image_t desc;
     IF_HIP_CHECK(hipMemcpy(&desc, hip_img, sizeof(IF_image_t), hipMemcpyDeviceToHost));
