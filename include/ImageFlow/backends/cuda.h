@@ -180,8 +180,6 @@ IF_RETRIEVE_IMG_IMPL(CUDA) {
 
 IF_FREE_IMG_IMPL(CUDA) {
     IF_image_t *cuda_img = imgs[IF_DEV_CUDA];
-    if(cuda_img == NULL)
-        return IF_NULL_POINTER;
 
     IF_image_t desc;
     IF_CUDA_CHECK(cudaMemcpy(&desc, cuda_img, sizeof(IF_image_t), cudaMemcpyDeviceToHost));

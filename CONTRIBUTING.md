@@ -60,19 +60,20 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
 1. **Register it in `include/ImageFlow/operations/operations.def`**:
 
    ```c
-   IF_OP_DEF(GRAYSCALE,  Grayscale,  POINT, EMPTY)
-   IF_OP_DEF(INVERT,     Invert,     POINT, EMPTY)
-   IF_OP_DEF(BRIGHTNESS, Brightness, POINT, FLOAT_FACTOR)
+   IF_OP_DEF(GRAYSCALE,  Grayscale,  POINT, EMPTY,        )
+   IF_OP_DEF(INVERT,     Invert,     POINT, EMPTY,        )
+   IF_OP_DEF(BRIGHTNESS, Brightness, POINT, FLOAT_FACTOR, float factor = 1.5f)
    ```
 
-   Each line is `IF_OP_DEF(id, name, traversal_type, args)`:
+   Each line is `IF_OP_DEF(id, name, traversal_type, args, def)`:
 
    - `id` — the bare identifier pasted into `IF_OP_##id` (e.g. `IF_OP_GRAYSCALE`).
    - `name` — used for the generated pipeline-builder function (`IF_flow_##name`, e.g. `IF_flow_Grayscale`) and for `IF_strop`.
    - `traversal_type` — one of `METADATA`, `POINT`, `STENCIL`, `REDUCTION`, `MORPH`. This characterizes the operation's memory access pattern and controls how aggressively the reorder scheduler is allowed to move it across device boundaries.
    - `args` — the suffix of the `IF_OP_ARGS_*` / `IF_OP_INIT_*` macros for this operation's parameters (see below). Use `EMPTY` if the operation takes no parameters.
+   - `def` — a declaration (or nothing, for `EMPTY` ops) providing the default value(s) that `IF_OP_INIT_<argtype>` reads when building this op's `default_<id>_args()`. Leave it blank (just a trailing comma) for `EMPTY` ops; for parameterized ops it should declare exactly the variable(s) your `IF_OP_INIT_<argtype>` macro references — e.g. `float factor = 1.5f` for `FLOAT_FACTOR`.
 
-   Adding this line is enough to get `IF_flow_{name}(flow, ...)` generated automatically for you — you don't write the pipeline builder function yourself. It also drives `include/ImageFlow/operations/op_args.h`, which generates a `default_<id>_args()` helper per op, and `tests/src/ops.c`, which generates an `ops/<name>/check_against_cpu` test that exercises the new op on every registered device once you complete step 3. See [Adding a test](#adding-a-test).
+   Adding this line is enough to get `IF_flow_{name}(flow, ...)` generated automatically for you — you don't write the pipeline builder function yourself. It also drives `include/ImageFlow/operations/op_args.h`, which generates a `default_<id>_args()` helper per op using each op's own `def`, and `tests/src/ops.c`, which generates an `ops/<name>/check_against_cpu` test that exercises the new op on every registered device once you complete step 3. See [Adding a test](#adding-a-test).
 
 2. **If the operation needs parameters**, extend `include/ImageFlow/operations/op_args.h`:
 
@@ -106,24 +107,25 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
 
    - a new member to the `IF_OpArgs_t` union holding whatever fields you need,
    - `#define IF_OP_ARGS_YOUR_ARGS , <parameter list>` — appended after `flow` in the generated builder's signature,
-   - `#define IF_OP_INIT_YOUR_ARGS (IF_OpArgs_t){ .your_member = { ... } }` — how the builder packs its parameters into the union.
+   - `#define IF_OP_INIT_YOUR_ARGS (IF_OpArgs_t){ .your_member = { ... } }` — how the builder packs its parameters into the union, reading whatever variable(s) your op's `def` field declares.
 
    Keep members flat (no pointers) — see the warning in `op_args.h` about why pointer members would complicate any future MPI/distributed execution model.
 
-   `op_args.h` itself then X-macros over `operations.def` a second time to generate a `default_<id>_args()` for every registered op, purely from the `IF_OP_INIT_<argtype>` you just defined:
+   `op_args.h` itself then X-macros over `operations.def` a second time to generate a `default_<id>_args()` for every registered op, splicing in each op's own `def` before packing it via `IF_OP_INIT_<argtype>`:
 
    ```c
-   #define IF_OP_DEF(op, name, type, argtype) \
+   #define IF_OP_DEF(op, name, type, argtype, def) \
    static inline void default_##op##_args(IF_OpArgs_t *args) { \
-       float factor = 1.5f; \
-       (void)factor; \
+       def; \
        *args = IF_OP_INIT_##argtype; \
    }
    #include "ImageFlow/operations/operations.def"
    #undef IF_OP_DEF
    ```
 
-   `factor` is a fixed stand-in value in scope for any `IF_OP_INIT_*` macro that references a `factor` parameter (e.g. `IF_OP_INIT_FLOAT_FACTOR`); the `(void)factor` silences the unused-variable warning for ops whose init macro doesn't reference it. `default_<id>_args()` is what the generated `ops/<name>/check_against_cpu` test (see [Adding a test](#adding-a-test)) uses to construct a representative `IF_OpArgs_t` without any hand-written per-op test fixture — so once your `IF_OP_INIT_YOUR_ARGS` exists, the test harness can build valid args for it automatically, with no extra step on your part.
+   Unlike an earlier version of this macro (which declared a single fixed `float factor = 1.5f` in scope for every op and silenced the resulting unused-variable warning with `(void)factor`), each op now supplies its own `def` directly in `operations.def` — so `EMPTY` ops declare nothing and `FLOAT_FACTOR` ops declare exactly the `factor` their `IF_OP_INIT_FLOAT_FACTOR` consumes. This is what `default_<id>_args()` uses to construct a representative `IF_OpArgs_t` for the generated `ops/<name>/check_against_cpu` test (see [Adding a test](#adding-a-test)) — so once your `IF_OP_INIT_YOUR_ARGS` exists and you've supplied a `def`, the test harness can build valid args for it automatically, with no extra step on your part.
+
+   > **Note:** threading a raw declaration through `operations.def` as a bare macro argument is a bit of a blunt instrument — it works because `def` is always a single, simple declaration today, but it doesn't scale gracefully if an op ever needs a more elaborate default (multiple statements, a computed value, conditional logic, etc.). If operation argument signatures grow significantly more complex, this is worth revisiting — likely by splitting into `IF_OP_LOCALS_<argtype>`-style tables like `IF_OP_ARGS_*` and `IF_OP_INIT_*` above. For the current, fairly narrow set of argument shapes (`EMPTY`, `FLOAT_FACTOR`), it's not worth the extra indirection yet.
 
 3. **Implement the operation for each device you want to support it on**, via `IF_OP_IMPL(dev, OP, flops_per_pixel, bytes_per_pixel) { ... }` in that device's backend file. Look at the CUDA implementations in `include/ImageFlow/backends/cuda.h` for the expected shape:
 

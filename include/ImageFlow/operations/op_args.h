@@ -30,10 +30,9 @@ typedef union {
 #define IF_OP_INIT_FLOAT_FACTOR \
     (IF_OpArgs_t){ .float_factor = { .factor = factor } }
 
-#define IF_OP_DEF(op, name, type, argtype) \
+#define IF_OP_DEF(op, name, type, argtype, def) \
 static inline void default_##op##_args(IF_OpArgs_t *args) { \
-    float factor = 1.5f; \
-    (void)factor; \
+    def; \
     *args = IF_OP_INIT_##argtype; \
 }
 #include "ImageFlow/operations/operations.def"

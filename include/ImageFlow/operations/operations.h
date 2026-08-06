@@ -57,7 +57,7 @@ typedef enum {
  * _IF_OP_LEN is a sentinel used to size the dispatch table; do not use it
  * as a valid operation identifier.
  */
-#define IF_OP_DEF(op, name, type, args) IF_OP_##op,
+#define IF_OP_DEF(op, name, type, args, def) IF_OP_##op,
 
 typedef enum {
     #include "operations.def"
