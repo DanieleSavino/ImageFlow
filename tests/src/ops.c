@@ -38,6 +38,7 @@ static void check_against_cpu(IF_DevType_t dev, IF_SupportedOp_t op, IF_OpArgs_t
     IF_FASTEST_CHECK(IF_dev2host(dev, imgs));
 
     int ok = 0;
+    // TODO: Compute per op loss estimate.
     IF_FASTEST_CHECK(IF_imageCompare(&host_img, &dev_img, 1.0f / 255.0f, &ok));
 
     out->test_flags  |= FASTEST_ASSERT_EQ;
