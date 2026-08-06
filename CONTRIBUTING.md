@@ -1,6 +1,6 @@
 # Contributing to ImageFlow
 
-The dispatch layer for devices, operations, and schedulers is table-driven, so adding any of the three usually means adding a `.def` entry plus one self-registering implementation file — no changes to the scheduler, pipeline, or dispatch code required.
+The dispatch layer for devices, operations, and schedulers is table-driven, so adding any of the three usually means adding a `.def` entry plus one self-registering implementation file — no changes to the scheduler, pipeline, or dispatch code required. Registering a device or an operation also gets you generated test coverage for free — see [Adding a test](#adding-a-test).
 
 ## Adding a device
 
@@ -14,14 +14,14 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
    IF_DEV_DEF(HIP)
    ```
 
-   Add a new `IF_DEV_DEF(YOUR_DEV)` line. This drives the `IF_DevType_t` enum, `IF_strdev`, and the size of every per-device dispatch table — nothing else needs to know the device exists.
+   Add a new `IF_DEV_DEF(YOUR_DEV)` line. This drives the `IF_DevType_t` enum, `IF_strdev`, and the size of every per-device dispatch table — nothing else needs to know the device exists. It also drives `tests/src/devs.c`: as soon as the line is added, `devs/YOUR_DEV/round_trip` and `devs/YOUR_DEV/double_free` tests exist and will run (skipped, until step 2 below makes the device report itself enabled). See [Adding a test](#adding-a-test).
 
 2. **Implement the backend.** Create `include/ImageFlow/backends/your_dev.h` (+ a matching `src/backends/your_dev.{c,cpp,cu}` that just `#include`s it, following the existing backends) and provide:
 
    - **A runtime availability check**, registered via `IF_CONSTRUCTOR` so it runs before `main()` and calls `IF_enable_device` / `IF_disable_device`.
    - **A load-image implementation**, via `IF_LOAD_IMG_IMPL(YOUR_DEV) { ... }` — moves a host image onto the device, populating `imgs[IF_DEV_YOUR_DEV]`.
    - **A retrieve-image implementation**, via `IF_RETRIEVE_IMG_IMPL(YOUR_DEV) { ... }` — moves `imgs[IF_DEV_YOUR_DEV]` back into the host image.
-   - **A free-image implementation**, via `IF_FREE_IMG_IMPL(YOUR_DEV) { ... }` — releases whatever the device-side allocation is and clears the slot back to `NULL`.
+   - **A free-image implementation**, via `IF_FREE_IMG_IMPL(YOUR_DEV) { ... }` — releases whatever the device-side allocation is and clears the slot back to `NULL`. Should return `IF_NULL_POINTER` (not crash) if the slot is already `NULL` — the generated `devs/YOUR_DEV/double_free` test exercises exactly this by freeing twice in a row.
    - **An implementation of every operation** you want available on this device (see [Adding an operation](#adding-an-operation) below) — a device with no registered op implementations is still a valid device, it just falls back to CPU for everything.
 
    All four of `IF_CONSTRUCTOR`, `IF_LOAD_IMG_IMPL`, `IF_RETRIEVE_IMG_IMPL`, and `IF_FREE_IMG_IMPL` self-register into their respective dispatch tables at load time — you only need to write the function bodies.
@@ -46,12 +46,14 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
 
    - `IF_LOAD_IMG_IMPL(CUDA)`, which allocates the device-side image on first use and reuses the allocation on subsequent calls, copying fresh host pixel data down each time.
    - `IF_RETRIEVE_IMG_IMPL(CUDA)`, which copies device pixel data back into the host `IF_image_t`.
-   - `IF_FREE_IMG_IMPL(CUDA)`, which frees the device buffer and struct and resets `imgs[IF_DEV_CUDA]` to `NULL`.
+   - `IF_FREE_IMG_IMPL(CUDA)`, which frees the device buffer and struct, returns `IF_NULL_POINTER` if the slot is already `NULL`, and resets `imgs[IF_DEV_CUDA]` to `NULL`.
    - One `IF_OP_IMPL(CUDA, OP, flops_per_pixel, bytes_per_pixel) { ... }` per operation (`GRAYSCALE`, `INVERT`, `BRIGHTNESS`), each launching a `__global__` kernel over the device image and synchronizing before returning.
 
    A new backend should mirror this shape: availability check → load/retrieve/free → one `IF_OP_IMPL` per supported operation.
 
 3. **Wire it into `CMakeLists.txt`** so its source file(s) get compiled and linked only when the relevant toolchain (CUDA/HIP/etc.) is actually available, following the existing `HAVE_CUDA` / `HAVE_HIP` pattern.
+
+4. **Build and run the generated tests** to confirm the backend behaves correctly — see [Adding a test](#adding-a-test) for how. No test code needs to be written for a new device beyond what `devs.c` already generates, unless you want additional device-specific coverage.
 
 ## Adding an operation
 
@@ -70,7 +72,7 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
    - `traversal_type` — one of `METADATA`, `POINT`, `STENCIL`, `REDUCTION`, `MORPH`. This characterizes the operation's memory access pattern and controls how aggressively the reorder scheduler is allowed to move it across device boundaries.
    - `args` — the suffix of the `IF_OP_ARGS_*` / `IF_OP_INIT_*` macros for this operation's parameters (see below). Use `EMPTY` if the operation takes no parameters.
 
-   Adding this line is enough to get `IF_flow_{name}(flow, ...)` generated automatically for you — you don't write the pipeline builder function yourself.
+   Adding this line is enough to get `IF_flow_{name}(flow, ...)` generated automatically for you — you don't write the pipeline builder function yourself. It also drives `include/ImageFlow/operations/op_args.h`, which generates a `default_<id>_args()` helper per op, and `tests/src/ops.c`, which generates an `ops/<name>/check_against_cpu` test that exercises the new op on every registered device once you complete step 3. See [Adding a test](#adding-a-test).
 
 2. **If the operation needs parameters**, extend `include/ImageFlow/operations/op_args.h`:
 
@@ -79,9 +81,11 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
     * @brief Tagged union of operation-specific arguments.
     *
     * Extend this union when adding new operations that require parameters.
+    * TODO: Clean this
     *
     * @warning Adding pointer members here would complicate any future
     *          distributed (MPI) execution model significantly.
+    *          Plus MPI datatypes would be a pain.
     */
    typedef union {
        struct { char _unused; } empty;        /**< Placeholder for zero-argument operations. */
@@ -106,6 +110,21 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
 
    Keep members flat (no pointers) — see the warning in `op_args.h` about why pointer members would complicate any future MPI/distributed execution model.
 
+   `op_args.h` itself then X-macros over `operations.def` a second time to generate a `default_<id>_args()` for every registered op, purely from the `IF_OP_INIT_<argtype>` you just defined:
+
+   ```c
+   #define IF_OP_DEF(op, name, type, argtype) \
+   static inline void default_##op##_args(IF_OpArgs_t *args) { \
+       float factor = 1.5f; \
+       (void)factor; \
+       *args = IF_OP_INIT_##argtype; \
+   }
+   #include "ImageFlow/operations/operations.def"
+   #undef IF_OP_DEF
+   ```
+
+   `factor` is a fixed stand-in value in scope for any `IF_OP_INIT_*` macro that references a `factor` parameter (e.g. `IF_OP_INIT_FLOAT_FACTOR`); the `(void)factor` silences the unused-variable warning for ops whose init macro doesn't reference it. `default_<id>_args()` is what the generated `ops/<name>/check_against_cpu` test (see [Adding a test](#adding-a-test)) uses to construct a representative `IF_OpArgs_t` without any hand-written per-op test fixture — so once your `IF_OP_INIT_YOUR_ARGS` exists, the test harness can build valid args for it automatically, with no extra step on your part.
+
 3. **Implement the operation for each device you want to support it on**, via `IF_OP_IMPL(dev, OP, flops_per_pixel, bytes_per_pixel) { ... }` in that device's backend file. Look at the CUDA implementations in `include/ImageFlow/backends/cuda.h` for the expected shape:
 
    ```c
@@ -129,8 +148,8 @@ The dispatch layer for devices, operations, and schedulers is table-driven, so a
 
    - The `args` parameter is the `IF_OpArgs_t` you defined in step 2 — pull your fields out via the union member (`args.float_factor.factor` above).
    - `imgs` is the array of length `_IF_DEV_LEN` handed down by the scheduler; index it by whichever device slot(s) your implementation actually needs.
-   - `flops_per_pixel` / `bytes_per_pixel` are cost-model metadata used for diagnostics (`IF_print_op_impls`) — pass reasonable estimates.
-   - An operation doesn't need an implementation on every device. If a device has no registered implementation for an operation, the scheduler falls back to CPU for that operation automatically.
+   - `flops_per_pixel` / `bytes_per_pixel` are cost-model metadata used for diagnostics (`IF_print_op_impls`) — pass reasonable estimates. These are also the fields the planned per-(op, device) loss estimate in [TODO.md](TODO.md) will consume.
+   - An operation doesn't need an implementation on every device. If a device has no registered implementation for an operation, the scheduler falls back to CPU for that operation automatically, and the generated `check_against_cpu` test skips that (op, device) pair via `CHECK_IMPL` rather than failing.
 
 That's it — no changes are needed to `pipeline.c`, `operations.c`, or any of the schedulers. The `.def` list is the single source of truth they all read from.
 
@@ -164,4 +183,38 @@ Schedulers follow the same registration-table pattern as devices and operations 
 
 4. **If it should be the default**, update `_DEFAULT_SCHED` at the top of `scheduler.c` (currently `IF_SCHEDULER_REORDER`). This is the fallback `IF_getenv_sched()` returns when the `IF_SCHED` environment variable is unset or doesn't match a registered scheduler name, and it's therefore what `IF_flow_run` (the no-scheduler-argument entry point) uses by default.
 
+5. **Add tests by hand.** Unlike devices and operations, schedulers aren't currently X-macro'd into `tests/src/`, so there's no automatic `IF_SCHED_DEF` → generated test yet — write one under `tests/src/` following the pattern in [Adding a test](#adding-a-test). Scheduler-correctness tests (e.g. validating that a new scheduler produces the same output as `IF_SCHEDULER_LINEAR`) are also tracked in [TODO.md](TODO.md).
+
 That's it — no changes are needed to `scheduler.c`'s dispatch table lookup, `IF_flow_run_sched`, or any hand-written switch statement. The `.def` list is the single source of truth all three registration tables (devices, operations, schedulers) read from.
+
+## Adding a test
+
+Tests live under `tests/src/*.c` and are picked up automatically — `tests/CMakeLists.txt` globs that directory and compiles whatever it finds into the `imageflow_tests_static` target, so a new `.c` file dropped in there is enough. No `CMakeLists.txt` edits required.
+
+Tests are written using [fastest](https://github.com/danielesavino/fastest) (vendored as a submodule at `tests/vendor/fastest`; `git submodule update --init --recursive` before your first build). Two headers under `tests/include/IF_tests/` exist specifically to make writing ImageFlow tests against fastest less verbose:
+
+- `IF_tests/error.h` gives you `IF_FASTEST_CHECK(expr)` — wrap any `IF_error_t`-returning ImageFlow call in it and it will fail the enclosing fastest test (with file/line-annotated logging) on error, instead of you having to unwrap `IF_error_t` by hand.
+- `IF_tests/utils.h` gives you `PROBE_DEV(out, dev)` (skip — not fail — if `dev` isn't enabled at runtime) and `CHECK_IMPL(impl, dev)` (skip if an op has no implementation for `dev`).
+
+### You probably don't need to write devs/ops tests by hand
+
+`tests/src/devs.c` and `tests/src/ops.c` already X-macro over `devices.def` and `operations.def` respectively, so simply adding a `IF_DEV_DEF(...)` or `IF_OP_DEF(...)` line (see [Adding a device](#adding-a-device) / [Adding an operation](#adding-an-operation) above) is enough to get:
+
+- `devs/<name>/round_trip` and `devs/<name>/double_free`, per device
+- `ops/<name>/check_against_cpu`, per operation, run against every enabled device
+
+with no test code of your own. Write a new file under `tests/src/` when you need coverage that doesn't fit this per-device/per-op shape — e.g. pipeline-level behavior, a specific scheduler, or a regression test for a bug that isn't captured by the generic round-trip/compare-to-CPU pattern.
+
+### Building and running
+
+```bash
+cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/debug --target imageflow_static imageflow_tests_static
+
+./scripts/build_wheel.sh debug
+python3 tests/main.py
+```
+
+`imageflow_tests_static` only compiles your test sources into a static archive — it isn't a runnable binary by itself. `scripts/build_wheel.sh` links `libImageFlow_tests.a` together with `libImageFlow.a` into a pybind11 Python extension (module name `IF_tests`) via fastest's own build flow under `tests/vendor/fastest/bindings`. `tests/main.py` then imports `fastest` and `IF_tests`, points fastest at it as the backend, and runs everything with `fastest.run_log_all()`.
+
+See [TODO.md](TODO.md) for planned additions to the test suite (loss-model regression tests, scheduler topological-order validation, a benchmarking harness) that build on this same convention.

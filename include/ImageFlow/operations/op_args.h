@@ -1,3 +1,11 @@
+#pragma once
+
+#include "ImageFlow/devices/devices.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Tagged union of operation-specific arguments.
  *
@@ -21,3 +29,16 @@ typedef union {
 
 #define IF_OP_INIT_FLOAT_FACTOR \
     (IF_OpArgs_t){ .float_factor = { .factor = factor } }
+
+#define IF_OP_DEF(op, name, type, argtype) \
+static inline void default_##op##_args(IF_OpArgs_t *args) { \
+    float factor = 1.5f; \
+    (void)factor; \
+    *args = IF_OP_INIT_##argtype; \
+}
+#include "ImageFlow/operations/operations.def"
+#undef IF_OP_DEF
+
+#ifdef __cplusplus
+}
+#endif

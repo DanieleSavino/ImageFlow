@@ -12,14 +12,11 @@ typedef enum {
 
 #undef IF_DEV_DEF
 
-
-
 extern const char *IF_DevNames[_IF_DEV_LEN];
 
 static inline const char* IF_strdev(IF_DevType_t dev) {
     return IF_DevNames[dev];
 }
-
 
 typedef enum {
     IF_STATUS_UNKNOWN = 0,

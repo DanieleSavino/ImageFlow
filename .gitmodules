@@ -1,0 +1,3 @@
+[submodule "tests/vendor/fastest"]
+	path = tests/vendor/fastest
+	url = https://github.com/danielesavino/fastest

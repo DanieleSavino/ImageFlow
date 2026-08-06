@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ImageFlow/constructor.h"
 #include "ImageFlow/operations/operations.h"
 
